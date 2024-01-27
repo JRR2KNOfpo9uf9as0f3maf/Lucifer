@@ -503,7 +503,7 @@ end
 setting.recheck = function(threads)
     ::BACK::
     for _, tile in pairs(getBot():getWorld():getTiles()) do
-        if tile.fg == 0 and getTile(tile.x, tile.y).flags ~= 0 then
+        if getTile(tile.x, tile.y).fg == 0 and getTile(tile.x, tile.y).flags ~= 0 then
             if splice then
                 if findItem(seed) == 0 or findItem(seedsplice) == 0 then
                     if looping then
@@ -672,7 +672,6 @@ setting.main = function()
         end
     end
     print("Please select all and re-execute script")
-    return error()
 end
 
 setting.setauth = function()
@@ -695,6 +694,7 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
         sleep(delayreconnect)
     end
     sleep(indexbot * delayexecute)
+    ::backk::
     for idx , value in ipairs(worlds) do
         ::BACK::
         print("["..indexbot.."]Planting")
@@ -707,23 +707,18 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                     setting.recheck(value)
                 else
                     setting.writeFile("("..value..") is wrong id")
-                    sleep(1000)
                     wrong = false
-                    sleep(5000)
                     print("["..indexbot.."]("..value..") is wrong door id, skipped world")
                     setting.botinfo("("..value..") is wrong door id, skipped world !! @everyone")
                 end
             else
                 setting.writeFile("("..value..") is NUKED !!")
-                sleep(1000)
                 nuked = false
-                sleep(5000)
                 print("["..indexbot.."]"..value.." is NUKED!, check ur world !!")
                 setting.botinfo("("..value..") is NUKED!, check ur world !! @everyone")
             end
         else
             subserver = false
-            sleep(5000)
             print("["..indexbot.."]Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
             setting.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
             sleep(120000)
