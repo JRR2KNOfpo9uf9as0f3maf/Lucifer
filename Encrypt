@@ -606,11 +606,11 @@ setting.plant = function(threads)
                 if splice then
                     while getTile(x,y).fg ~= seed do
                         place(seed,0,0)
-                        sleep(plant)
+                        sleep(delayplant)
                         setting.reconnect(threads,doorfarmList,x,y)
                     end
                     while getTile(x,y).fg == seed do
-                        place(seed,0,0)
+                        place(seedsplice,0,0)
                         sleep(delayplant)
                         setting.reconnect(threads,doorfarmList,x,y)
                     end
