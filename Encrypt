@@ -13,6 +13,11 @@ setting.takeseed = 1
 setting.timechecker = os.time()
 
 if indexbot then
+    startY = 1 + ((indexbot - 1) * 2)
+    increment = #getBots() * 2
+    getBot().legit_mode = false
+    getBot().move_range = moveRange
+    getBot().move_interval = moveInterval
     for i =  1,worldperbot do
         table.insert(worlds,farmList[math.floor((indexbot - 1) * worldperbot + i)])
     end
@@ -93,7 +98,7 @@ end
 setting.botstatus = function()
     strings = ""
     for _, bot in pairs(getBots()) do
-        strings = strings.."\n["..bot.level.."]"..string.upper(bot.name).."" 
+        strings = strings.."\n["..bot.level.."]||"..string.upper(bot.name).."||" 
     end
     return strings
 end
@@ -101,7 +106,7 @@ end
 setting.botworld = function()
     strings = ""
     for _, bots in pairs(getBots()) do
-        strings = strings.."\n"..string.upper(bots:getWorld().name).."" 
+        strings = strings.."\n||"..string.upper(bots:getWorld().name).."||" 
     end
     return strings
 end
@@ -109,13 +114,14 @@ end
 setting.storagename = function()
     str = ""
 	for i = 1, #storage do
-        str = str.."\n"..string.upper(storage[i]).." : "..(infoid[storage[i]] or "?")..""
+        str = str.."\n||"..string.upper(storage[i]).."|| : "..(infoid[storage[i]] or "?")..""
     end
     return str
 end
 
 setting.webhookinfo = function()
 	if botinfo then
+        realtime = os.time() - setting.timechecker
         local text = [[
             $webHookUrl = "]]..linkbotinfo..[[/messages/]]..messageidbotinfo..[["
             $payload = @{
@@ -126,8 +132,8 @@ setting.webhookinfo = function()
                         color = "]]..math.random(111111,999999)..[["
                         fields = @(
                             @{
-                                name = "RUNTIME"
-                                value = "]]..""..setting.goodtimes(os.difftime(os.time(),setting.timechecker))..""..[["
+                                name = ""
+                                value = "]].."RUNTIME : "..math.floor(realtime/86400).." Days "..math.floor(realtime%86400/3600).." Hours "..math.floor(realtime%86400%3600/60).." Minutes"..[["
                                 inline = "false"
                             }
                             @{
@@ -150,10 +156,6 @@ setting.webhookinfo = function()
                                 value = "]]..setting.getEnetBot()..[["
                                 inline = "true"
                             }
-                        )
-                    }
-                    @{
-                        fields = @(
                             @{
                                 name = "STORAGE SEED"
                                 value = "]]..setting.storagename()..[["
@@ -344,18 +346,6 @@ setting.itemFloat = function(id)
     return getBot():getWorld().growscan:getObjects()[id] or 0
 end
 
-setting.goodtimes = function(estimates)
-    local seconds = tonumber(estimates)
-    if seconds <= 0 then
-        return "00:00:00";
-    else
-        hours = string.format("%02.f", math.floor(estimates/3600));
-        minutes = string.format("%02.f", math.floor(estimates/60 - (hours*60)));
-        seconds = string.format("%02.f", math.floor(estimates - hours*3600 - minutes *60));
-        return ""..hours.." : "..minutes.." : "..seconds
-    end
-end
-
 setting.take = function(threads)
     for i = setting.takeseed , #storage do
         ::BACK::
@@ -497,74 +487,14 @@ setting.take = function(threads)
 end
 
 setting.recheck = function(threads)
-    ::BACK::
-    for _, tile in pairs(getBot():getWorld():getTiles()) do
-        if getTile(tile.x, tile.y).fg == 0 and getTile(tile.x, tile.y).flags ~= 0 then
-            if splice then
-                if findItem(seed) == 0 or findItem(seedsplice) == 0 then
-                    if looping then
-                        while findItem(seed) == 0 or findItem(seedsplice) == 0 do
-                            setting.take(threads)
-                            sleep(delaylooping)
-                        end
-                    else
-                        setting.take(threads)
-                    end
-                    print("["..indexbot.."]Planting")
-                    setting.warp(threads,doorfarmList,delaywarp)
-                    setting.webhookinfo()
-                    goto BACK
-                end
-            else
-                if findItem(seed) == 0 then
-                    if looping then
-                        while findItem(seed) == 0 do
-                            setting.take(threads)
-                            sleep(delaylooping)
-                        end
-                    else
-                        setting.take(threads)
-                    end
-                    print("["..indexbot.."]Planting")
-                    setting.warp(threads,doorfarmList,delaywarp)
-                    setting.webhookinfo()
-                    goto BACK
-                end
-            end
-            findPath(tile.x,tile.y)
-            sleep(delayplant)
-            setting.reconnect(threads,doorfarmList,tile.x,tile.y)
-            if splice then
-                while getTile(tile.x,tile.y).fg ~= seed do
-                    place(seed,0,0)
-                    sleep(delayplant)
-                    setting.reconnect(threads,doorfarmList,tile.x,tile.y)
-                end
-                while getTile(tile.x,tile.y).fg == seed do
-                    place(seedsplice,0,0)
-                    sleep(delayplant)
-                    setting.reconnect(threads,doorfarmList,tile.x,tile.y)
-                end
-            else
-                if getTile(tile.x,tile.y).fg ~= seed then
-                    place(seed,0,0)
-                    sleep(delayplant)
-                    setting.reconnect(threads,doorfarmList,tile.x,tile.y)
-                end
-            end
-        end
-    end
-end
-
-setting.plant = function(threads)
     tileA = 99
     tileB = 0
     tileC = -1
     tileD = 0
     ::BACK::
-    for y = -1, 53 do
-        for x = tileA, tileB, tileC do
-            if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+    if not multiplebot then
+        for _, tile in pairs(getBot():getWorld():getTiles()) do
+            if getTile(tile.x, tile.y).fg == 0 and getTile(tile.x, tile.y).flags ~= 0 then
                 if splice then
                     if findItem(seed) == 0 or findItem(seedsplice) == 0 then
                         if looping then
@@ -596,43 +526,259 @@ setting.plant = function(threads)
                         goto BACK
                     end
                 end
-                findPath(x,y)
-                sleep(delayplant)
-                setting.reconnect(threads,doorfarmList,x,y)
+                findPath(tile.x,tile.y)
+                sleep(30)
+                setting.reconnect(threads,doorfarmList,tile.x,tile.y)
                 if splice then
-                    while getTile(x,y).fg ~= seed do
+                    while getTile(tile.x,tile.y).fg ~= seed do
                         place(seed,0,0)
                         sleep(delayplant)
-                        setting.reconnect(threads,doorfarmList,x,y)
+                        setting.reconnect(threads,doorfarmList,tile.x,tile.y)
                     end
-                    while getTile(x,y).fg == seed do
+                    while getTile(tile.x,tile.y).fg == seed do
                         place(seedsplice,0,0)
                         sleep(delayplant)
-                        setting.reconnect(threads,doorfarmList,x,y)
+                        setting.reconnect(threads,doorfarmList,tile.x,tile.y)
                     end
                 else
-                    if getTile(x,y).fg ~= seed then
+                    if getTile(tile.x,tile.y).fg ~= seed then
                         place(seed,0,0)
                         sleep(delayplant)
-                        setting.reconnect(threads,doorfarmList,x,y)
+                        setting.reconnect(threads,doorfarmList,tile.x,tile.y)
                     end
                 end
             end
         end
-        if tileD == 1 then
-            if tileA == 0 then
-                tileA = 99
-                tileB = 0
-                tileC = -1
-                tileD = 0
-            elseif tileA == 99 then
-                tileA = 0
-                tileB = 99
-                tileC = 1
-                tileD = 0
+    else
+        for y = startY, 53, increment do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+                    if splice then
+                        if findItem(seed) == 0 or findItem(seedsplice) == 0 then
+                            if looping then
+                                while findItem(seed) == 0 or findItem(seedsplice) == 0 do
+                                    setting.take(threads)
+                                    sleep(delaylooping)
+                                end
+                            else
+                                setting.take(threads)
+                            end
+                            print("["..indexbot.."]Planting")
+                            setting.warp(threads,doorfarmList,delaywarp)
+                            setting.webhookinfo()
+                            goto BACK
+                        end
+                    else
+                        if findItem(seed) == 0 then
+                            if looping then
+                                while findItem(seed) == 0 do
+                                    setting.take(threads)
+                                    sleep(delaylooping)
+                                end
+                            else
+                                setting.take(threads)
+                            end
+                            print("["..indexbot.."]Planting")
+                            setting.warp(threads,doorfarmList,delaywarp)
+                            setting.webhookinfo()
+                            goto BACK
+                        end
+                    end
+                    findPath(x,y)
+                    sleep(30)
+                    setting.reconnect(threads,doorfarmList,x,y)
+                    if splice then
+                        while getTile(x,y).fg ~= seed do
+                            place(seed,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                        while getTile(x,y).fg == seed do
+                            place(seedsplice,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                    else
+                        if getTile(x,y).fg ~= seed then
+                            place(seed,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                    end
+                end
             end
-        elseif tileD == 0 then
-            tileD = tileD + 1
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
+                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
+            end
+        end
+    end
+end
+
+setting.plant = function(threads)
+    tileA = 99
+    tileB = 0
+    tileC = -1
+    tileD = 0
+    ::BACK::
+    if not multiplebot then
+        for y = -1, 53 do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+                    if splice then
+                        if findItem(seed) == 0 or findItem(seedsplice) == 0 then
+                            if looping then
+                                while findItem(seed) == 0 or findItem(seedsplice) == 0 do
+                                    setting.take(threads)
+                                    sleep(delaylooping)
+                                end
+                            else
+                                setting.take(threads)
+                            end
+                            print("["..indexbot.."]Planting")
+                            setting.warp(threads,doorfarmList,delaywarp)
+                            setting.webhookinfo()
+                            goto BACK
+                        end
+                    else
+                        if findItem(seed) == 0 then
+                            if looping then
+                                while findItem(seed) == 0 do
+                                    setting.take(threads)
+                                    sleep(delaylooping)
+                                end
+                            else
+                                setting.take(threads)
+                            end
+                            print("["..indexbot.."]Planting")
+                            setting.warp(threads,doorfarmList,delaywarp)
+                            setting.webhookinfo()
+                            goto BACK
+                        end
+                    end
+                    findPath(x,y)
+                    sleep(30)
+                    setting.reconnect(threads,doorfarmList,x,y)
+                    if splice then
+                        while getTile(x,y).fg ~= seed do
+                            place(seed,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                        while getTile(x,y).fg == seed do
+                            place(seedsplice,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                    else
+                        if getTile(x,y).fg ~= seed then
+                            place(seed,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                    end
+                end
+            end
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
+                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
+            end
+        end
+    else
+        for y = startY, 53, increment do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+                    if splice then
+                        if findItem(seed) == 0 or findItem(seedsplice) == 0 then
+                            if looping then
+                                while findItem(seed) == 0 or findItem(seedsplice) == 0 do
+                                    setting.take(threads)
+                                    sleep(delaylooping)
+                                end
+                            else
+                                setting.take(threads)
+                            end
+                            print("["..indexbot.."]Planting")
+                            setting.warp(threads,doorfarmList,delaywarp)
+                            setting.webhookinfo()
+                            goto BACK
+                        end
+                    else
+                        if findItem(seed) == 0 then
+                            if looping then
+                                while findItem(seed) == 0 do
+                                    setting.take(threads)
+                                    sleep(delaylooping)
+                                end
+                            else
+                                setting.take(threads)
+                            end
+                            print("["..indexbot.."]Planting")
+                            setting.warp(threads,doorfarmList,delaywarp)
+                            setting.webhookinfo()
+                            goto BACK
+                        end
+                    end
+                    findPath(x,y)
+                    sleep(30)
+                    setting.reconnect(threads,doorfarmList,x,y)
+                    if splice then
+                        while getTile(x,y).fg ~= seed do
+                            place(seed,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                        while getTile(x,y).fg == seed do
+                            place(seedsplice,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                    else
+                        if getTile(x,y).fg ~= seed then
+                            place(seed,0,0)
+                            sleep(delayplant)
+                            setting.reconnect(threads,doorfarmList,x,y)
+                        end
+                    end
+                end
+            end
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
+                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
+            end
         end
     end
 end
@@ -671,6 +817,20 @@ setting.main = function()
 end
 
 setting.setauth = function()
+    if not indexbot and proxyServerDatabase then
+        getProxyManager().custom_http_proxy = true
+        getProxyManager().http_cooldown = delayDataBase
+        if useDatabaseForMainProxy then
+            getProxyManager().use_main_ip = true -- Use Main IP in Data Proxy Tab.
+        end
+        if setDatabaseType == "http" then
+            addDataProxy(proxyDatabase, Proxy.http) 
+        elseif setDatabaseType == "https" then
+            addDataProxy(proxyDatabase, Proxy.https)
+        elseif setDatabaseType == "socks" then
+            addDataProxy(proxyDatabase, Proxy.socks5)
+        end
+    end
     if not indexbot and withproxy then
         getProxyManager():setLimit(botperproxy)
         for _, lists in pairs(proxyList) do
@@ -679,7 +839,7 @@ setting.setauth = function()
     end
 end
 
-if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq" then
+if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq" and scriptVersion == "0.1" then
     setting.setauth()
     if autologin and not indexbot then
         setting.main()
@@ -690,35 +850,67 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
         sleep(delayreconnect)
     end
     sleep(indexbot * delayexecute)
-    ::backk::
-    for idx , value in ipairs(worlds) do
-        ::BACK::
-        print("["..indexbot.."]Planting")
-        setting.warp(value,doorfarmList,delaywarp)
-        setting.webhookinfo()
-        if not subserver then
-            if not nuked then
-                if not wrong then
-                    setting.plant(value)
-                    setting.recheck(value)
+    if not multiplebot then
+        for idx , value in ipairs(worlds) do
+            ::BACK::
+            print("["..indexbot.."]Planting")
+            setting.warp(value,doorfarmList,delaywarp)
+            setting.webhookinfo()
+            if not subserver then
+                if not nuked then
+                    if not wrong then
+                        setting.plant(value)
+                        setting.recheck(value)
+                    else
+                        setting.writeFile("("..value..") is wrong id")
+                        wrong = false
+                        print("["..indexbot.."]("..value..") is wrong door id, skipped world")
+                        setting.botinfo("("..value..") is wrong door id, skipped world !! @everyone")
+                    end
                 else
-                    setting.writeFile("("..value..") is wrong id")
-                    wrong = false
-                    print("["..indexbot.."]("..value..") is wrong door id, skipped world")
-                    setting.botinfo("("..value..") is wrong door id, skipped world !! @everyone")
+                    setting.writeFile("("..value..") is NUKED !!")
+                    nuked = false
+                    print("["..indexbot.."]"..value.." is NUKED!, check ur world !!")
+                    setting.botinfo("("..value..") is NUKED!, check ur world !! @everyone")
                 end
             else
-                setting.writeFile("("..value..") is NUKED !!")
-                nuked = false
-                print("["..indexbot.."]"..value.." is NUKED!, check ur world !!")
-                setting.botinfo("("..value..") is NUKED!, check ur world !! @everyone")
+                subserver = false
+                print("["..indexbot.."]Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
+                setting.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
+                sleep(120000)
+                goto BACK
             end
-        else
-            subserver = false
-            print("["..indexbot.."]Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
-            setting.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
-            sleep(120000)
-            goto BACK
+        end
+    else
+        for idx, value in pairs(farmList) do
+            ::BACK::
+            print("["..indexbot.."]Planting")
+            setting.warp(value,doorfarmList,delaywarp)
+            setting.webhookinfo()
+            if not subserver then
+                if not nuked then
+                    if not wrong then
+                        setting.plant(value)
+                        setting.recheck(value)
+                    else
+                        setting.writeFile("("..value..") is wrong id")
+                        wrong = false
+                        print("["..indexbot.."]("..value..") is wrong door id, skipped world")
+                        setting.botinfo("("..value..") is wrong door id, skipped world !! @everyone")
+                    end
+                else
+                    setting.writeFile("("..value..") is NUKED !!")
+                    nuked = false
+                    print("["..indexbot.."]"..value.." is NUKED!, check ur world !!")
+                    setting.botinfo("("..value..") is NUKED!, check ur world !! @everyone")
+                end
+            else
+                subserver = false
+                print("["..indexbot.."]Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
+                setting.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
+                sleep(120000)
+                goto BACK
+            end
         end
     end
     print("["..indexbot.."]finished all world, terminated script!")
