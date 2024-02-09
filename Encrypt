@@ -348,11 +348,11 @@ end
 
 setting.take = function(threads)
     for i = setting.takeseed , #storage do
-        ::BACK::
         print("["..indexbot.."]Take seed")
         world = storage[i]
         setting.warp(world,doorstorage,delaywarp)
         setting.webhookinfo()
+        ::BACK::
         if not subserver then
             if not nuked then
                 if not wrong then
@@ -476,6 +476,7 @@ setting.take = function(threads)
             print("["..indexbot.."]Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
             setting.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
             sleep(120000)
+            setting.reconnect(world,doorstorage)
             goto BACK
         end
     end
@@ -852,10 +853,10 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
     sleep(indexbot * delayexecute)
     if not multiplebot then
         for idx , value in ipairs(worlds) do
-            ::BACK::
             print("["..indexbot.."]Planting")
             setting.warp(value,doorfarmList,delaywarp)
             setting.webhookinfo()
+            ::BACK::
             if not subserver then
                 if not nuked then
                     if not wrong then
@@ -878,15 +879,16 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                 print("["..indexbot.."]Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
                 setting.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
                 sleep(120000)
+                setting.reconnect(value,doorfarmList)
                 goto BACK
             end
         end
     else
         for idx, value in pairs(farmList) do
-            ::BACK::
             print("["..indexbot.."]Planting")
             setting.warp(value,doorfarmList,delaywarp)
             setting.webhookinfo()
+            ::BACK::
             if not subserver then
                 if not nuked then
                     if not wrong then
@@ -909,6 +911,7 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                 print("["..indexbot.."]Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes")
                 setting.botinfo("Bot : "..getBot().name.." system is sub-server, sleeping for 2 minutes @everyone")
                 sleep(120000)
+                setting.reconnect(value,doorfarmList)
                 goto BACK
             end
         end
