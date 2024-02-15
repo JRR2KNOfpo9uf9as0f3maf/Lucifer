@@ -163,6 +163,28 @@ customizable.reconnect = function(world,id,x,y)
         getBot():disconnect()
         sleep(4000)
     end
+    if not getBot():isInWorld(world:upper()) or not getBot():isInWorld() then
+        if getBot().status == BotStatus.online then 
+            customizable.botStatics("("..getBot().name..") at another world, trying to joining world again @everyone")
+            while not getBot():isInWorld(world:upper()) do
+                getBot():sendPacket(3,"action|join_request\nname|"..world:upper().."\ninvitedWorld|0")
+                sleep(delaywarp)
+            end
+            if id ~= "" then
+                while getTile(getBot().x,getBot().y).fg == 6 do
+                    getBot():sendPacket(3,"action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0")
+                    sleep(delaywarp)
+                end
+            end
+            if x and y then
+                while getBot().x ~= x or getBot().y ~= y do
+                    getBot():findPath(x,y)
+                    sleep(150)
+                end
+            end
+            customizable.botStatics("("..getBot().name..") success to joining world @everyone")
+        end
+    end
     if getBot().status ~= BotStatus.online then
         customizable.botStatics("("..getBot().name..") status is offline @everyone")
         while getBot().status ~= BotStatus.online do
@@ -173,27 +195,14 @@ customizable.reconnect = function(world,id,x,y)
                 getBot():stopScript()
             end
         end
-        local counts = 0
         while not getBot():isInWorld(world:upper()) do
             getBot():sendPacket(3,"action|join_request\nname|"..world:upper().."\ninvitedWorld|0")
             sleep(delaywarp)
-            if not getBot():isInWorld(world:upper()) then 
-                counts = counts + 1
-                if counts > 5 then
-                    customizable.botStatics("("..getBot().name..") Failed to joining world again, terminated script @everyone")
-                    getBot():stopScript()
-                end
-            end
         end
         if id ~= "" then
-            local stuckk = 0
             while getTile(getBot().x,getBot().y).fg == 6 do
                 getBot():sendPacket(3,"action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0")
                 sleep(delaywarp)
-                if stuckk > 3 then
-                    customizable.botStatics("("..getBot().name..") Failed to reconnecting bot, stuck at white door. Terminated script @everyone")
-                    getBot():stopScript()
-                end
             end
         end
         if x and y then
@@ -410,63 +419,84 @@ end
 
 customizable.recheckingWorld = function(threads)
     ::BACK::
+    tileA = 99
+    tileB = 0
+    tileC = -1
+    tileD = 0
     print("["..pcallBot.."]Rechecking")
     for i = 1, 2 do
         if not multiplebot then
-            for idx, tile in ipairs(getBot():getWorld():getTiles()) do
-                if getTile(tile.x,tile.y).fg == 0 and getTile(tile.x,tile.y).flags ~= 0 then
-                    getBot():findPath(tile.x,tile.y)
-                    sleep(30)
-                    customizable.reconnect(threads,doorfarmList,tile.x,tile.y)
-                    if splice then
-                        while getTile(tile.x,tile.y).fg ~= seed do
-                            getBot():place(tile.x,tile.y,seed)
-                            sleep(delayplant)
-                            customizable.reconnect(threads,doorfarmList,tile.x,tile.y)
+            for y = -1, 53 do
+                for x = tileA, tileB, tileC do
+                    if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+                        getBot():findPath(x,y)
+                        sleep(delayplant)
+                        customizable.reconnect(threads,doorfarmList,x,y)
+                        if splice then
+                            while getTile(x,y).fg ~= seed do
+                                getBot():place(x,y,seed)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,doorfarmList,x,y)
+                            end
+                            while getTile(x,y).fg == seed do
+                                getBot():place(x,y,seedsplice)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,doorfarmList,x,y)
+                            end
+                        else
+                            if getTile(x,y).fg ~= seed then
+                                getBot():place(x,y,seed)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,doorfarmList,x,y)
+                            end
                         end
-                        while getTile(tile.x,tile.y).fg == seed do
-                            getBot():place(tile.x,tile.y,seedsplice)
-                            sleep(delayplant)
-                            customizable.reconnect(threads,doorfarmList,tile.x,tile.y)
+                    end
+                    if splice then
+                        if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                            if looping then
+                                while getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 do
+                                    customizable.onTake(threads)
+                                    sleep(delaylooping)
+                                end
+                            else
+                                customizable.onTake(threads)
+                            end
+                            print("["..pcallBot.."]Recheck")
+                            customizable.warp(threads,doorfarmList,delaywarp)
+                            customizable.initializeBots()
+                            goto BACK
                         end
                     else
-                        if getTile(tile.x,tile.y).fg ~= seed then
-                            getBot():place(tile.x,tile.y,seed)
-                            sleep(delayplant)
-                            customizable.reconnect(threads,doorfarmList,tile.x,tile.y)
+                        if getBot():getInventory():getItemCount(seed) == 0 then
+                            if looping then
+                                while getBot():getInventory():getItemCount(seed) == 0 do
+                                    customizable.onTake(threads)
+                                    sleep(delaylooping)
+                                end
+                            else
+                                customizable.onTake(threads)
+                            end
+                            print("["..pcallBot.."]Recheck")
+                            customizable.warp(threads,doorfarmList,delaywarp)
+                            customizable.initializeBots()
+                            goto BACK
                         end
                     end
                 end
-                if splice then
-                    if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
-                        if looping then
-                            while getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 do
-                                customizable.onTake(threads)
-                                sleep(delaylooping)
-                            end
-                        else
-                            customizable.onTake(threads)
-                        end
-                        print("["..pcallBot.."]Planting")
-                        customizable.warp(threads,doorfarmList,delaywarp)
-                        customizable.initializeBots()
-                        goto BACK
+                if tileD == 1 then
+                    if tileA == 0 then
+                        tileA = 99
+                        tileB = 0
+                        tileC = -1
+                        tileD = 0
+                    elseif tileA == 99 then
+                        tileA = 0
+                        tileB = 99
+                        tileC = 1
+                        tileD = 0
                     end
-                else
-                    if getBot():getInventory():getItemCount(seed) == 0 then
-                        if looping then
-                            while getBot():getInventory():getItemCount(seed) == 0 do
-                                customizable.onTake(threads)
-                                sleep(delaylooping)
-                            end
-                        else
-                            customizable.onTake(threads)
-                        end
-                        print("["..pcallBot.."]Planting")
-                        customizable.warp(threads,doorfarmList,delaywarp)
-                        customizable.initializeBots()
-                        goto BACK
-                    end
+                elseif tileD == 0 then
+                    tileD = tileD + 1
                 end
             end
         else
@@ -474,7 +504,7 @@ customizable.recheckingWorld = function(threads)
                 for x = 0, 99, 1 do
                     if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
                         getBot():findPath(x,y)
-                        sleep(30)
+                        sleep(delayplant)
                         customizable.reconnect(threads,doorfarmList,x,y)
                         if splice then
                             while getTile(x,y).fg ~= seed do
@@ -534,62 +564,83 @@ end
 
 customizable.plant = function(threads)
     ::BACK::
+    tileA = 99
+    tileB = 0
+    tileC = -1
+    tileD = 0
     print("["..pcallBot.."]Planting")
     if not multiplebot then
-        for idx, tile in ipairs(getBot():getWorld():getTiles()) do
-            if getTile(tile.x,tile.y).fg == 0 and getTile(tile.x,tile.y).flags ~= 0 then
-                getBot():findPath(tile.x,tile.y)
-                sleep(30)
-                customizable.reconnect(threads,doorfarmList,tile.x,tile.y)
-                if splice then
-                    while getTile(tile.x,tile.y).fg ~= seed do
-                        getBot():place(tile.x,tile.y,seed)
-                        sleep(delayplant)
-                        customizable.reconnect(threads,doorfarmList,tile.x,tile.y)
+        for y = -1,53 do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+                    getBot():findPath(x,y)
+                    sleep(delayplant)
+                    customizable.reconnect(threads,doorfarmList,x,y)
+                    if splice then
+                        while getTile(x,y).fg ~= seed do
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                        while getTile(x,y).fg == seed do
+                            getBot():place(x,y,seedsplice)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    else
+                        if getTile(x,y).fg ~= seed then
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
                     end
-                    while getTile(tile.x,tile.y).fg == seed do
-                        getBot():place(tile.x,tile.y,seedsplice)
-                        sleep(delayplant)
-                        customizable.reconnect(threads,doorfarmList,tile.x,tile.y)
+                end
+                if splice then
+                    if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        print("["..pcallBot.."]Planting")
+                        customizable.warp(threads,doorfarmList,delaywarp)
+                        customizable.initializeBots()
+                        goto BACK
                     end
                 else
-                    if getTile(tile.x,tile.y).fg ~= seed then
-                        getBot():place(tile.x,tile.y,seed)
-                        sleep(delayplant)
-                        customizable.reconnect(threads,doorfarmList,tile.x,tile.y)
+                    if getBot():getInventory():getItemCount(seed) == 0 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) == 0 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        print("["..pcallBot.."]Planting")
+                        customizable.warp(threads,doorfarmList,delaywarp)
+                        customizable.initializeBots()
+                        goto BACK
                     end
                 end
             end
-            if splice then
-                if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
-                    if looping then
-                        while getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 do
-                            customizable.onTake(threads)
-                            sleep(delaylooping)
-                        end
-                    else
-                        customizable.onTake(threads)
-                    end
-                    print("["..pcallBot.."]Planting")
-                    customizable.warp(threads,doorfarmList,delaywarp)
-                    customizable.initializeBots()
-                    goto BACK
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
                 end
-            else
-                if getBot():getInventory():getItemCount(seed) == 0 then
-                    if looping then
-                        while getBot():getInventory():getItemCount(seed) == 0 do
-                            customizable.onTake(threads)
-                            sleep(delaylooping)
-                        end
-                    else
-                        customizable.onTake(threads)
-                    end
-                    print("["..pcallBot.."]Planting")
-                    customizable.warp(threads,doorfarmList,delaywarp)
-                    customizable.initializeBots()
-                    goto BACK
-                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
             end
         end
     else
@@ -597,7 +648,7 @@ customizable.plant = function(threads)
             for x = 0, 99, 1 do
                 if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
                     getBot():findPath(x,y)
-                    sleep(30)
+                    sleep(delayplant)
                     customizable.reconnect(threads,doorfarmList,x,y)
                     if splice then
                         while getTile(x,y).fg ~= seed do
