@@ -409,6 +409,7 @@ customizable.onTake = function(threads)
 end
 
 customizable.recheckingWorld = function(threads)
+    ::BACK::
     print("["..pcallBot.."]Rechecking")
     for i = 1, 2 do
         if not multiplebot then
@@ -449,6 +450,7 @@ customizable.recheckingWorld = function(threads)
                         print("["..pcallBot.."]Planting")
                         customizable.warp(threads,doorfarmList,delaywarp)
                         customizable.initializeBots()
+                        goto BACK
                     end
                 else
                     if getBot():getInventory():getItemCount(seed) == 0 then
@@ -463,6 +465,7 @@ customizable.recheckingWorld = function(threads)
                         print("["..pcallBot.."]Planting")
                         customizable.warp(threads,doorfarmList,delaywarp)
                         customizable.initializeBots()
+                        goto BACK
                     end
                 end
             end
@@ -505,6 +508,7 @@ customizable.recheckingWorld = function(threads)
                             print("["..pcallBot.."]Recheck")
                             customizable.warp(threads,doorfarmList,delaywarp)
                             customizable.initializeBots()
+                            goto BACK
                         end
                     else
                         if getBot():getInventory():getItemCount(seed) == 0 then
@@ -519,6 +523,7 @@ customizable.recheckingWorld = function(threads)
                             print("["..pcallBot.."]Recheck")
                             customizable.warp(threads,doorfarmList,delaywarp)
                             customizable.initializeBots()
+                            goto BACK
                         end
                     end
                 end
@@ -528,6 +533,7 @@ customizable.recheckingWorld = function(threads)
 end
 
 customizable.plant = function(threads)
+    ::BACK::
     print("["..pcallBot.."]Planting")
     if not multiplebot then
         for idx, tile in ipairs(getBot():getWorld():getTiles()) do
@@ -567,6 +573,7 @@ customizable.plant = function(threads)
                     print("["..pcallBot.."]Planting")
                     customizable.warp(threads,doorfarmList,delaywarp)
                     customizable.initializeBots()
+                    goto BACK
                 end
             else
                 if getBot():getInventory():getItemCount(seed) == 0 then
@@ -581,6 +588,7 @@ customizable.plant = function(threads)
                     print("["..pcallBot.."]Planting")
                     customizable.warp(threads,doorfarmList,delaywarp)
                     customizable.initializeBots()
+                    goto BACK
                 end
             end
         end
@@ -623,6 +631,7 @@ customizable.plant = function(threads)
                         print("["..pcallBot.."]Planting")
                         customizable.warp(threads,doorfarmList,delaywarp)
                         customizable.initializeBots()
+                        goto BACK
                     end
                 else
                     if getBot():getInventory():getItemCount(seed) == 0 then
@@ -637,6 +646,7 @@ customizable.plant = function(threads)
                         print("["..pcallBot.."]Planting")
                         customizable.warp(threads,doorfarmList,delaywarp)
                         customizable.initializeBots()
+                        goto BACK
                     end
                 end
             end
