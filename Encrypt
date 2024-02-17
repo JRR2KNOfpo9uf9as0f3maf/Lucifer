@@ -418,17 +418,17 @@ customizable.onTake = function(threads)
 end
 
 customizable.recheckingWorld = function(threads)
-    ::BACK::
     tileA = 99
     tileB = 0
     tileC = -1
     tileD = 0
+    ::BACK::
     print("["..pcallBot.."]Rechecking")
     for i = 1, 2 do
         if not multiplebot then
             for y = -1, 53 do
                 for x = tileA, tileB, tileC do
-                    if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+                    if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
                         getBot():findPath(x,y)
                         sleep(delayplant)
                         customizable.reconnect(threads,doorfarmList,x,y)
@@ -501,8 +501,8 @@ customizable.recheckingWorld = function(threads)
             end
         else
             for y = tileY, 53, action do
-                for x = 0, 99, 1 do
-                    if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+                for x = tileA, tileB, tileC do
+                    if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
                         getBot():findPath(x,y)
                         sleep(delayplant)
                         customizable.reconnect(threads,doorfarmList,x,y)
@@ -557,22 +557,37 @@ customizable.recheckingWorld = function(threads)
                         end
                     end
                 end
+                if tileD == 1 then
+                    if tileA == 0 then
+                        tileA = 99
+                        tileB = 0
+                        tileC = -1
+                        tileD = 0
+                    elseif tileA == 99 then
+                        tileA = 0
+                        tileB = 99
+                        tileC = 1
+                        tileD = 0
+                    end
+                elseif tileD == 0 then
+                    tileD = tileD + 1
+                end
             end
         end
     end
 end
 
 customizable.plant = function(threads)
-    ::BACK::
     tileA = 99
     tileB = 0
     tileC = -1
     tileD = 0
+    ::BACK::
     print("["..pcallBot.."]Planting")
     if not multiplebot then
-        for y = -1,53 do
+        for y = -1, 53 do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
                     getBot():findPath(x,y)
                     sleep(delayplant)
                     customizable.reconnect(threads,doorfarmList,x,y)
@@ -645,8 +660,8 @@ customizable.plant = function(threads)
         end
     else
         for y = tileY, 53, action do
-            for x = 0, 99, 1 do
-                if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
                     getBot():findPath(x,y)
                     sleep(delayplant)
                     customizable.reconnect(threads,doorfarmList,x,y)
@@ -700,6 +715,21 @@ customizable.plant = function(threads)
                         goto BACK
                     end
                 end
+            end
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
+                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
             end
         end
     end
