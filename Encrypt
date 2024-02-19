@@ -220,7 +220,7 @@ customizable.reconnect = function(world,id,x,y)
     end
 end
 
-customizable.warp = function(world,door,cooldown)
+customizable.warp = function(world,door)
     name = world
     if door ~= "" then
         name = name .. "|" ..door
@@ -265,7 +265,7 @@ customizable.warp = function(world,door,cooldown)
             listenEvents(3)
             count = count + 1
             if count < 5 then
-                sleep(cooldown)
+                sleep(delaywarp * 1000)
             else
                 sleep(delayidiotserver * 60000)
             end
@@ -298,7 +298,7 @@ customizable.warp = function(world,door,cooldown)
                     customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
                 end
                 getBot():sendPacket(3,"action|join_request\nname|"..name.."\ninvitedWorld|0")
-                sleep(cooldown)
+                sleep(delaywarp * 1000)
                 stuck = stuck + 1
                 if stuck == 5 then
                     wrong = true
