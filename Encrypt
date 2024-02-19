@@ -190,14 +190,14 @@ customizable.reconnect = function(world,id,x,y)
         customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
         while getBot().status ~= BotStatus.online do
             getBot():connect()
-            sleep(delayreconnect * 1000)
             if getBot().status == BotStatus.account_banned then
                 customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Stopped, Reason : Bot status "..customizable.initBot().."")
                 getBot():stopScript()
             end
             if getBot().status == BotStatus.maintenance then
-                customizable.botStatics(""..getBot().name.." status is "..customizable.initBot()..", Sleeping for "..delaymaintenance.." minutes","Status Script : Running")
                 sleep(delaymaintenance * 60000)
+            else
+                sleep(delayreconnect * 1000)
             end
         end
         while not getBot():isInWorld(world:upper()) do
@@ -249,14 +249,14 @@ customizable.warp = function(world,door,cooldown)
                 customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
                 while getBot().status ~= BotStatus.online do
                     getBot():connect()
-                    sleep(delayreconnect * 1000)
                     if getBot().status == BotStatus.account_banned then
                         customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Stopped, Reason : Bot status "..customizable.initBot().."")
                         getBot():stopScript()
                     end
                     if getBot().status == BotStatus.maintenance then
-                        customizable.botStatics(""..getBot().name.." status is "..customizable.initBot()..", Sleeping for "..delaymaintenance.." minutes","Status Script : Running")
                         sleep(delaymaintenance * 60000)
+                    else
+                        sleep(delayreconnect * 1000)
                     end
                 end
                 customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
@@ -285,14 +285,14 @@ customizable.warp = function(world,door,cooldown)
                     customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
                     while getBot().status ~= BotStatus.online do
                         getBot():connect()
-                        sleep(delayreconnect * 1000)
                         if getBot().status == BotStatus.account_banned then
                             customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Stopped, Reason : Bot status "..customizable.initBot().."")
                             getBot():stopScript()
                         end
                         if getBot().status == BotStatus.maintenance then
-                            customizable.botStatics(""..getBot().name.." status is "..customizable.initBot()..", Sleeping for "..delaymaintenance.." minutes","Status Script : Running")
                             sleep(delaymaintenance * 60000)
+                        else
+                            sleep(delayreconnect * 1000)
                         end
                     end
                     customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
