@@ -5,24 +5,82 @@ for i, bot in pairs(getBots()) do
 end
 
 initialize = {}
+worlds = {}
+botAction = {}
+reversed = {}
 local customizable = {
-    index = 1,
-    indexDrop = 1,
     indexTake = 1,
-    tileX = 1,
-    initX = posX - 1,
-    initY = posY - 1
+    indexMessage = 1,
+    formatTime = os.time()
 }
+local tileY = 1 + ((pcallBot - 1) * 2)
+local action = #getBots() * 2
+local increment = 1 * 2 * 3
+identity = 5
+getBot().auto_reconnect = false
+getBot().legit_mode = false
+getBot().move_range = moveRange
+getBot().move_interval = moveInterval
+for i =  1,worldperbot do
+    table.insert(worlds,farmList[math.floor((pcallBot - 1) * worldperbot + i)])
+end
+
+for i =  1,customizable.indexMessage do
+    table.insert(reversed,messageidbotinfo[math.floor((pcallBot - 1) * customizable.indexMessage + i)])
+end
+
+for x = math.floor(identity/2),1,-1 do
+    x = x * -1
+    table.insert(botAction,x)
+end
+
+for x = 0, math.ceil(identity/2) - 1 do
+    table.insert(botAction,x)
+end
+
+customizable.placeTop = function(ex,ye)
+    for _,idx in pairs(botAction) do
+        if getTile(ex + idx,ye - 2).fg ~= seed then
+            return true
+        end
+    end
+    return false
+end
+
+customizable.placeDown = function(x,y)
+    for _,idx in pairs(botAction) do
+        if getTile(x + idx,y + 2).fg ~= seed then
+            return true
+        end
+    end
+    return false
+end
+
+customizable.placeBot = function(x,y)
+    for _,idx in pairs(botAction) do
+        if getTile(x + idx,y).fg ~= seed then
+            return true
+        end
+    end
+    return false
+end
 
 customizable.randomLetter = function()
-    local withnum = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    local generate = ""
-    for i = 1,10 do
-        local randomnumber = math.random(1,#withnum)
-        local acaknomor = string.sub(withnum,randomnumber,randomnumber)
-        generate = generate..acaknomor
+    local letter = ""
+    local function stringRandom()
+        local random = math.random(1,3)
+        if random == 1 then
+            return string.char(math.random(97,122))
+        elseif random == 2 then
+            return string.char(math.random(65,90))
+        else
+            return string.char(math.random(48,57))
+        end
     end
-    return generate
+    for i = 1, 10 do
+        letter = letter..stringRandom()
+    end
+    return letter
 end
 
 customizable.split = function(str, ptr)
@@ -36,96 +94,20 @@ customizable.split = function(str, ptr)
     return tbl
 end
 
-customizable.initBot = function()
-    if getBot().status == BotStatus.online then
-        return "Online"
-    elseif getBot().status == BotStatus.account_banned  then
-        return "Suspended"
-    elseif getBot().status == BotStatus.error_connecting  then
-        return "Ercon"
-    elseif getBot().status == BotStatus.maintenance then
-        return "Maintenance"
-    elseif getBot().status == BotStatus.changing_subserver then
-        return "Changing Subserver"
+customizable.initOnFarm = function()
+    str = ""
+    if not multiplebot then
+        for i = 1, #worlds do
+            local world = customizable.split(worlds[i],"[^|]+")[1]
+            str = str.."\n||"..string.upper(world).."|| ("..(initialize[world] or "?")..")"
+        end
     else
-        return "Disconnect"
-    end
-end
-
-customizable.initStatus = function()
-    str = ""
-    for _, bot in pairs(getBots()) do
-        str = str.."\n["..bot.level.."]||"..string.upper(bot.name).."||" 
+        for i = 1, #farmList do
+            local world = customizable.split(farmList[i],"[^|]+")[1]
+            str = str.."\n||"..string.upper(world).."|| ("..(initialize[world] or "?")..")"
+        end
     end
     return str
-end
-
-customizable.initWorld = function()
-    str = ""
-    for _, bots in pairs(getBots()) do
-        str = str.."\n||"..string.upper(bots:getWorld().name).."||" 
-    end
-    return str
-end
-
-customizable.initOnStorage = function()
-    str = ""
-    for i = 1, #storagetake do
-        local world = customizable.split(storagetake[i],"[^|]+")[1]
-        str = str.."\n||"..world.."|| : "..(initialize[world] or "?")..""
-    end
-    return str
-end
-
-customizable.initOutStorage = function()
-    str = ""
-    for i = 1, #storagedrop do
-        local world = customizable.split(storagedrop[i],"[^|]+")[1]
-        str = str.."\n||"..world.."|| : "..(initialize[world] or "?")..""
-    end
-    return str
-end
-
-customizable.itemFloat = function(id)
-    return getBot():getWorld().growscan:getObjects()[id] or 0
-end
-
-customizable.initializeBots = function()
-	if linkbotinfo ~= "x" then
-        local text = [[
-            $webHookUrl = "]]..linkbotinfo..[[/messages/]]..messageidbotinfo..[["
-            $payload = @{
-                username = "Caramoy's"
-                embeds = @(
-                    @{
-                        title = "Caramoy Syndicate [https://discord.com/invite/fTTKW8vvuq]"
-                        color = "]]..math.random(111111,999999)..[["
-                        fields = @(
-                            @{
-                                name = "World Take"
-                                value = "]]..customizable.initOnStorage()..[["
-                                inline = "false"
-                            }
-                            @{
-                                name = "World Drop"
-                                value = "]]..customizable.initOutStorage()..[["
-                                inline = "false"
-                            }
-                        )
-                        footer = @{
-                            text = "[Lucifer] : Move WTW Script`nLast update : ]]..(os.date("!%a %b %d, %Y at %I:%M %p", os.time() + 7 * 60 * 60))..[["
-                        }
-                    }
-                )
-            }
-            
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Patch -ContentType 'application/json'
-        ]]
-        local pipe = io.popen("powershell -command -", "w")
-        pipe:write(text)
-        pipe:close()
-    end
 end
 
 customizable.botStatics = function(text,execution)
@@ -158,6 +140,77 @@ customizable.botStatics = function(text,execution)
         local file = io.popen("powershell -command -", "w")
         file:write(text)
         file:close()
+    end
+end
+
+customizable.initBot = function()
+    if getBot().status == BotStatus.online then
+        return "Online"
+    elseif getBot().status == BotStatus.account_banned  then
+        return "Suspended"
+    elseif getBot().status == BotStatus.error_connecting  then
+        return "Ercon"
+    elseif getBot().status == BotStatus.maintenance then
+        return "Maintenance"
+    elseif getBot().status == BotStatus.changing_subserver then
+        return "Changing Subserver"
+    else
+        return "Disconnect"
+    end
+end
+
+customizable.initOnStorage = function()
+    str = ""
+    for i = 1, #storage do
+        local world = customizable.split(storage[i],"[^|]+")[1]
+        str = str.."\n||"..string.upper(world).."|| : "..(initialize[world] or "?")..""
+    end
+    return str
+end
+
+customizable.initializeBots = function()
+	if linkbotinfo ~= "x" then
+        realtime = os.time() - customizable.formatTime
+        for idx, val in pairs(reversed) do
+            local text = [[
+                $webHookUrl = "]]..linkbotinfo..[[/messages/]]..val..[["
+                $payload = @{
+                    username = "Caramoy's"
+                    embeds = @(
+                        @{
+                            title = "Caramoy Syndicate [https://discord.com/invite/fTTKW8vvuq]"
+                            color = "]]..math.random(111111,999999)..[["
+                            fields = @(
+                                @{
+                                    name = "Information"
+                                    value = "]].."Botname : ["..getBot().level.."]"..string.upper(getBot().name).."\nCurrent : "..string.upper(getBot():getWorld().name).."\nStatus : "..customizable.initBot().."\nRuntime : "..math.floor(realtime/86400).." Days "..math.floor(realtime%86400/3600).." Hours "..math.floor(realtime%86400%3600/60).." Minutes"..[["
+                                    inline = "true"
+                                }
+                                @{
+                                    name = "Storage Seed"
+                                    value = "]]..customizable.initOnStorage()..[["
+                                    inline = "true"
+                                }
+                                @{
+                                    name = "Farm Estimates"
+                                    value = "]]..customizable.initOnFarm()..[["
+                                    inline = "false"
+                                }
+                            )
+                            footer = @{
+                                text = "[Lucifer] : Plant Script`nLast update : ]]..(os.date("!%a %b %d, %Y at %I:%M %p", os.time() + 7 * 60 * 60))..[["
+                            }
+                        }
+                    )
+                }
+                
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Patch -ContentType 'application/json'
+            ]]
+            local pipe = io.popen("powershell -command -", "w")
+            pipe:write(text)
+            pipe:close()
+        end    
     end
 end
 
@@ -308,124 +361,132 @@ customizable.warp = function(world,door)
     end
 end
 
-customizable.onStoring = function()
-    for i = customizable.indexDrop , #storagedrop do
-        print("["..pcallBot.."]Dropping items")
-        world = customizable.split(storagedrop[i],"[^|]+")[1]
-        door = customizable.split(storagedrop[i],"[^|]+")[2]
+customizable.itemFloat = function(id)
+    return getBot():getWorld().growscan:getObjects()[id] or 0
+end
+
+customizable.onTake = function(threads)
+    for i = customizable.indexTake , #storage do
+        world = customizable.split(storage[i],"[^|]+")[1]
+        door = customizable.split(storage[i],"[^|]+")[2]
         customizable.warp(world,door)
         customizable.initializeBots()
         if not loggoning then
             if not subserver then
                 if not nuked then
                     if not wrong then
-                        if customizable.itemFloat(itemId[1]) < limit then
-                            for y,pack in pairs(itemId) do
-                                for i,tile in pairs(getBot():getWorld():getTiles()) do
-                                    if separated then
-                                        if tile.fg == 0 or tile.bg == 0 then
-                                            ::BACK::
-                                            getBot():findPath(customizable.initX + (customizable.tileX),customizable.initY)
-                                            sleep(100)
-                                            local count = 0
-                                            customizable.reconnect(world,door,customizable.initX + (customizable.tileX),customizable.initY )
-                                            if customizable.initX + (customizable.tileX) >= 98 then
-                                                customizable.initY = customizable.initY - 1
-                                                customizable.tileX = 0
-                                            end
-                                            while getBot():getInventory():getItemCount(pack) > 0 do
-                                                getBot():drop(pack,200)
-                                                sleep(delaydrop * 1000)
-                                                customizable.reconnect(world,door,customizable.initX + (customizable.tileX),customizable.initY)
-                                                count = count + 1
-                                                customizable.tileX = customizable.tileX + 1
-                                                goto BACK
-                                            end
-                                        end
-                                    else
-                                        if tile.fg == 0 or tile.bg == 0 then
-                                            ::BACK::
-                                            getBot():findPath(customizable.initX + (customizable.tileX),customizable.initY)
-                                            sleep(100)
-                                            local count = 0
-                                            customizable.reconnect(world,door,customizable.initX + (customizable.tileX),customizable.initY - (y-1))
-                                            if customizable.initX + (customizable.tileX) >= 98 then
-                                                customizable.initY = customizable.initY - 1
-                                                customizable.tileX = 0
-                                            end
-                                            while getBot():getInventory():getItemCount(pack) > 0 do
-                                                getBot():drop(pack,200)
-                                                sleep(delaydrop * 1000)
-                                                customizable.reconnect(world,door,customizable.initX + (customizable.tileX),customizable.initY - (y-1))
-                                                count = count + 1
-                                                if count >= 2 then
-                                                    customizable.tileX = customizable.tileX + 1
-                                                    goto BACK
-                                                end
-                                            end
-                                        end
+                        if not splice then
+                            if customizable.itemFloat(seed) == 0 and not looping then
+                                initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
+                                customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
+                                print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
+                                customizable.indexTake = customizable.indexTake + 1
+                                if customizable.indexTake > #storage then
+                                    initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
+                                    customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seed storage is limit")
+                                    print("["..pcallBot.."]All seeds storage has empty, terminated script ")
+                                    customizable.initializeBots()
+                                    customizable.warp(customizable.randomLetter(),"")
+                                    if removingbot then
+                                        removeBot()
+                                        sleep(2000)
                                     end
-                                    if getBot():getInventory():getItemCount(pack) == 0 then
+                                    getBot():stopScript()
+                                end
+                            else
+                                for _, object in pairs(getBot():getWorld():getObjects()) do
+                                    if object.id == seed then
+                                        getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
+                                        sleep(100)
+                                        getBot():collect(2)
+                                        sleep(1000)
+                                        customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
+                                    end
+                                    if getBot():getInventory():getItemCount(seed) >= 15 then
                                         break
                                     end
                                 end
+                                sleep(100)
+                                break
                             end
-                            sleep(100)
-                            break
                         else
-                            initialize[world] = ""..customizable.itemFloat(itemId[1]).."x (LIMIT)"
-                            customizable.botStatics("Drop storage : ||"..world.."|| has reached limit, skipped world","Status Script : Running")
-                            print("["..pcallBot.."]Drop storage : "..world.."  has reached limit, skipped world")
-                            customizable.indexDrop = customizable.indexDrop + 1
-                            if customizable.indexDrop > #storagedrop then
-                                initialize[world] = ""..customizable.itemFloat(itemId[1]).."x (LIMIT)"
-                                customizable.botStatics("All drop storage has reached limit","Status Script : Stopped, Reason : All drop storage is limit")
-                                print("["..pcallBot.."]All drop storage has reached limit")
-                                customizable.initializeBots()
-                                if removingbot then
-                                    removeBot()
-                                    sleep(2000)
+                            if customizable.itemFloat(seed) == 0 or customizable.itemFloat(seedsplice) == 0 and not looping then
+                                initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
+                                customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
+                                print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
+                                customizable.indexTake = customizable.indexTake + 1
+                                if customizable.indexTake > #storage then
+                                    initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
+                                    customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seeds storage is empty")
+                                    print("["..pcallBot.."]All seeds storage has empty, terminated script ")
+                                    customizable.initializeBots()
+                                    if removingbot then
+                                        removeBot()
+                                        sleep(2000)
+                                    end
+                                    getBot():stopScript()
                                 end
-                                customizable.warp(customizable.randomLetter(),"")
-                                getBot():stopScript()
+                            else
+                                for _, object in pairs(getBot():getWorld():getObjects()) do
+                                    if object.id == seed then
+                                        getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
+                                        sleep(100)
+                                        getBot():collect(2)
+                                        sleep(1000)
+                                        customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
+                                    end
+                                    if getBot():getInventory():getItemCount(seed) >= 15 then
+                                        break
+                                    end
+                                end
+                                sleep(1000)
+                                for _, object in pairs(getBot():getWorld():getObjects()) do
+                                    if object.id == seedsplice then
+                                        getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
+                                        sleep(100)
+                                        getBot():collect(2)
+                                        sleep(1000)
+                                        customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
+                                    end
+                                    if getBot():getInventory():getItemCount(seedsplice) >= 15 then
+                                        break
+                                    end
+                                end
+                                sleep(100)
+                                break
                             end
-                            customizable.tileX = 0
                         end
                     else
-                        initialize[world] = "WRONG DOOR"
+                        initialize[world] = "WRONG DOOR ID"
                         wrong = false
-                        print("["..pcallBot.."]("..world..") Id door drop storage is wrong, check ur id door!")
-                        customizable.botStatics("||"..world.."|| Id door drop storage is wrong, check ur id door!","Status Script : Running")
-                        customizable.indexDrop = customizable.indexDrop + 1
-                        if customizable.indexDrop > #storagedrop then
-                            print("["..pcallBot.."]All drop storage has reached limit")
-                            customizable.botStatics("All drop storage has reached limit!","Status Script : Stopped, Reason : All drop storage is limit")
+                        customizable.botStatics("Seeds storage : ||"..world.."|| is wrong door id, skipped world","Script status : Running")
+                        print("["..pcallBot.."]Seeds storage : ("..world..") is wrong door id, skipped world")
+                        customizable.indexTake = customizable.indexTake + 1
+                        if customizable.indexTake > #storage then
+                            customizable.botStatics("All seeds storage has empty","Script status : Stopped, Reason : All seeds storage is empty")
+                            print("["..pcallBot.."]All seeds storage has empty, terminated script")
                             if removingbot then
                                 removeBot()
                                 sleep(2000)
                             end
-                            customizable.warp(customizable.randomLetter(),"")
                             getBot():stopScript()
                         end
-                        customizable.tileX = 0
                     end
                 else
                     initialize[world] = "NUKED"
                     nuked = false
-                    print("["..pcallBot.."]("..world..") drop Storage is NUKED, check ur storage!")
-                    customizable.botStatics("||"..world.."|| drop Storage is NUKED, check ur storage!","Status Script : Running")
-                    customizable.indexDrop = customizable.indexDrop + 1
-                    if customizable.indexDrop > #storagedrop then
-                        print("["..pcallBot.."]All drop storage has reached limit!")
-                        customizable.botStatics("All drop storage has reached limit!","Status Script : Stopped, All drop storage is limit")
+                    customizable.botStatics("Seeds storage : ||"..world.."|| is NUKED, skipped world","Script status : Running")
+                    print("["..pcallBot.."]Seeds storage : ("..world..") is NUKED, skipped world")
+                    customizable.indexTake = customizable.indexTake + 1
+                    if customizable.indexTake > #storage then
+                        customizable.botStatics("All seeds storage has empty, terminated script","Script status : Stopped, Reason : All seed storage is empty")
+                        print("["..pcallBot.."]All seeds storage has empty, terminated script")
                         if removingbot then
                             removeBot()
                             sleep(2000)
                         end
-                        customizable.warp(customizable.randomLetter(),"")
                         getBot():stopScript()
                     end
-                    customizable.tileX = 0
                 end
             else
                 subserver = false
@@ -438,151 +499,536 @@ customizable.onStoring = function()
             sleep(delayidiotserver * 60000)
         end
     end
-    initialize[world] = ""..customizable.itemFloat(itemId[1]).."x"
+    if not splice then
+        initialize[world] = ""..customizable.itemFloat(seed).."x"
+    else
+        initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x"
+    end
 end
 
-customizable.onTake = function()
-    for i = customizable.indexTake, #storagetake do
-        print("["..pcallBot.."]Taking items")
-        world = customizable.split(storagetake[i],"[^|]+")[1]
-        door = customizable.split(storagetake[i],"[^|]+")[2]
-        customizable.warp(world,door)
-        customizable.initializeBots()
-        if not loggoning then
-            if not subserver then
-                if not nuked then
-                    if not wrong then
-                        if not looping then
-                            if customizable.itemFloat(itemId[1]) > 0 then
-                                for _, pack in pairs(itemId) do
-                                    for _, object in pairs(getBot():getWorld():getObjects()) do
-                                        if object.id == pack then
-                                            getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
-                                            sleep(100)
-                                            getBot():collect(3)
-                                            sleep(500)
-                                            customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
-                                        end
-                                        if getBot():getInventory():getItemCount(pack) > 0 then
-                                            break
-                                        end
-                                    end
-                                end
-                                sleep(100)
-                                break
-                            else
-                                initialize[world] = ""..customizable.itemFloat(itemId[1]).."x (EMPTY)"
-                                customizable.botStatics("Take storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
-                                print("["..pcallBot.."]Take storage : ("..world..") has empty, skipped world")
-                                customizable.indexTake = customizable.indexTake + 1
-                                if customizable.indexTake > #storagetake then
-                                    initialize[world] = ""..customizable.itemFloat(itemId[1]).."x (EMPTY)"
-                                    customizable.botStatics("All take storage has empty","Status Script : Stopped, Reason : All storage take is empty")
-                                    print("["..pcallBot.."]All take storage has empty")
-                                    customizable.initializeBots()
-                                    if removingbot then
-                                        removeBot()
-                                        sleep(2000)
-                                    end
-                                    customizable.warp(customizable.randomLetter(),"")
-                                    getBot():stopScript()
-                                end
-                            end
-                        else
-                            for _, pack in pairs(itemId) do
-                                for _, object in pairs(getBot():getWorld():getObjects()) do
-                                    if object.id == pack then
-                                        getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
-                                        sleep(100)
-                                        getBot():collect(3)
-                                        sleep(500)
-                                        customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
-                                    end
-                                    if getBot():getInventory():getItemCount(pack) > 0 then
-                                        break
-                                    end
-                                end
-                            end
-                            sleep(100)
-                            break
-                        end
-                    else
-                        initialize[world] = "WRONG DOOR"
-                        wrong = false
-                        print("["..pcallBot.."]("..world..") Id door take storage is wrong, check ur id door!")
-                        customizable.botStatics("||"..world.."|| Id door take storage is wrong, check ur id door!","Status Script : Running")
-                        customizable.indexTake = customizable.indexTake + 1
-                        if customizable.indexTake > #storagetake then
-                            print("["..pcallBot.."]All take storage has empty")
-                            customizable.botStatics("All take storage has empty!","Status Script : Stopped, Reason : All storage take is empty")
-                            if removingbot then
-                                removeBot()
-                                sleep(2000)
-                            end
-                            customizable.warp(customizable.randomLetter(),"")
-                            getBot():stopScript()
-                        end
-                    end
-                else
-                    initialize[world] = "NUKED"
-                    nuked = false
-                    print("["..pcallBot.."]("..world..") take Storage is NUKED, check ur storage!")
-                    customizable.botStatics("||"..world.."|| take Storage is NUKED, check ur storage!","Status Script : Running")
-                    customizable.indexTake = customizable.indexTake + 1
-                    if customizable.indexTake > #storagetake then
-                        print("["..pcallBot.."]All take storage has empty!")
-                        customizable.botStatics("All take storage has empty!","Status Script : Stopped, Reason : All take storage is empty")
-                        if removingbot then
-                            removeBot()
-                            sleep(2000)
-                        end
-                        customizable.warp(customizable.randomLetter(),"")
-                        getBot():stopScript()
+customizable.pattern = function(world,id,ex,ye)
+    botX = getBot().x
+    botY = getBot().y
+    if botX == 1 then
+        botX = botX + 2
+        getBot():findPath(botX,botY)
+        sleep(100)
+    elseif botX == 2 then
+        botX = botX + 1
+        getBot():findPath(botX,botY)
+        sleep(100)
+    elseif botX == 0 then
+        botX = botX + 3
+        getBot():findPath(botX,botY)
+        sleep(100)
+    elseif getTile(botX - 1, botY).fg ~= 0 then
+        botX = botX + 2
+        getBot():findPath(botX,botY)
+        sleep(100)
+    elseif getTile(botX - 2, botY).fg ~= 0 then
+        botX = botX + 1
+        getBot():findPath(botX,botY)
+        sleep(100)
+    end
+    if getBot():getInventory():getItemCount(seed) >= 15 then
+        for idx = -2 , 2 do
+            local count1 = 0
+            while getTile(botX - idx,botY - 2).fg ~= seed do
+                getBot():place(botX - idx,botY - 2,seed)
+                sleep(delayplant)
+                customizable.reconnect(world,id,ex,ye)
+                count1 = count1 + 1
+                if count1 > 5 then
+                    break
+                end
+            end
+            sleep(delayplant)
+            local count2 = 0
+            while getTile(botX - idx,botY).fg ~= seed do
+                getBot():place(botX - idx,botY,seed)
+                sleep(delayplant)
+                customizable.reconnect(world,id,ex,ye)
+                count2 = count2 + 1
+                if count2 > 5 then
+                    break
+                end
+            end
+            sleep(delayplant)
+            local count3 = 0
+            while getTile(botX - idx,botY+2).fg ~= seed do
+                getBot():place(botX - idx,botY+2,seed)
+                sleep(delayplant)
+                customizable.reconnect(world,id,ex,ye)
+                count3 = count3 + 1
+                if count3 > 5 then
+                    break
+                end
+            end
+        end
+    end
+    if splice then
+        if getBot():getInventory():getItemCount(seedsplice) >= 15 then
+            for idx = -2 , 2 do
+                local count1 = 0
+                while getTile(botX - idx,botY - 2).fg == seed do
+                    getBot():place(botX - idx,botY - 2,seedsplice)
+                    sleep(delayplant)
+                    customizable.reconnect(world,id,ex,ye)
+                    count1 = count1 + 1
+                    if count1 > 5 then
+                        break
                     end
                 end
-            else
-                subserver = false
-                customizable.botStatics(""..getBot().name.." system is subserver, sleeping on "..delayidiotserver.." minutes","Status Script : Running")
-                sleep(delayidiotserver * 60000)
+                sleep(delayplant)
+                local count2 = 0
+                while getTile(botX - idx,botY).fg == seed do
+                    getBot():place(botX - idx,botY,seedsplice)
+                    sleep(delayplant)
+                    customizable.reconnect(world,id,ex,ye)
+                    count2 = count2 + 1
+                    if count2 > 5 then
+                        break
+                    end
+                end
+                sleep(delayplant)
+                local count3 = 0
+                while getTile(botX - idx,botY+2).fg == seed do
+                    getBot():place(botX - idx,botY+2,seedsplice)
+                    sleep(delayplant)
+                    customizable.reconnect(world,id,ex,ye)
+                    count3 = count3 + 1
+                    if count3 > 5 then
+                        break
+                    end
+                end
             end
-        else
-            loggoning = false
-            customizable.botStatics("@everyone",""..getBot().name.." system is Too many login, sleeping on "..delayidiotserver.." minutes","Status Script : Running")
-            sleep(delayidiotserver * 60000)
         end
     end
-    initialize[world] = ""..customizable.itemFloat(itemId[1]).."x"
 end
 
-customizable.realizm = function()
-    for idx, val in pairs(itemId) do
-        if getBot():getInventory():getItemCount(val) > 0 then
-            return true
+customizable.recheckWorld = function(threads)
+    tileA = 99
+    tileB = 0
+    tileC = -1
+    tileD = 0
+    ::BACK::
+    print("["..pcallBot.."]Rechecking")
+    if not multiplebot then
+        for y = -1 , 53 do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
+                    getBot():findPath(x,y)
+                    sleep(30)
+                    customizable.reconnect(threads,doorfarmList,x,y)
+                    if splice then
+                        if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                            if looping then
+                                while getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 do
+                                    customizable.onTake(threads)
+                                    sleep(delaylooping * 1000)
+                                end
+                            else
+                                customizable.onTake(threads)
+                            end
+                            customizable.warp(threads,doorfarmList)
+                            customizable.initializeBots()
+                            goto BACK
+                        end
+                        while getTile(x,y).fg ~= seed do
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                        while getTile(x,y).fg == seed do
+                            getBot():place(x,y,seedsplice)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    else
+                        if getBot():getInventory():getItemCount(seed) == 0 then
+                            if looping then
+                                while getBot():getInventory():getItemCount(seed) == 0 do
+                                    customizable.onTake(threads)
+                                    sleep(delaylooping * 1000)
+                                end
+                            else
+                                customizable.onTake(threads)
+                            end
+                            customizable.warp(threads,doorfarmList)
+                            customizable.initializeBots()
+                            goto BACK
+                        end
+                        if getTile(x,y).fg ~= seed then
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    end
+                end
+            end
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
+                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
+            end
+        end
+    else
+        for y = tileY, 53, action do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
+                    getBot():findPath(x,y)
+                    sleep(30)
+                    customizable.reconnect(threads,doorfarmList,x,y)
+                    if splice then
+                        if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                            break
+                        end
+                        while getTile(x,y).fg ~= seed do
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                        while getTile(x,y).fg == seed do
+                            getBot():place(x,y,seedsplice)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    else
+                        if getBot():getInventory():getItemCount(seed) == 0 then
+                            break
+                        end
+                        if getTile(x,y).fg ~= seed then
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    end
+                end
+                if splice then
+                    if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,doorfarmList)
+                        customizable.initializeBots()
+                        goto BACK
+                    end
+                else
+                    if getBot():getInventory():getItemCount(seed) == 0 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) == 0 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,doorfarmList)
+                        customizable.initializeBots()
+                        goto BACK
+                    end
+                end
+            end
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
+                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
+            end
         end
     end
-    return false
 end
 
-if Information == "Script Move WTW made by Caramoy Syndicate, Link Server : https://discord.com/invite/fTTKW8vvuq" and scriptVersion == "0.2" then
-    getBot().auto_reconnect = false
+customizable.plant = function(threads)
+    tileA = 99
+    tileB = 0
+    tileC = -1
+    tileD = 0
+    ::BACK::
+    print("["..pcallBot.."]Planting")
+    if not multiplebot then
+        for y = 3 , 53, increment do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 and x >= 3 then
+                    getBot():findPath(x-2,y)
+                    sleep(30)
+                    customizable.reconnect(threads,doorfarmList,x-2,y)
+                    customizable.pattern(threads,doorfarmList,x-2,y)
+                end
+                if splice then
+                    if getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,doorfarmList)
+                        customizable.initializeBots()
+                        goto BACK
+                    end
+                else
+                    if getBot():getInventory():getItemCount(seed) <= 15 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) <= 15 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,doorfarmList)
+                        customizable.initializeBots()
+                        goto BACK
+                    end
+                end
+            end
+        end
+    else
+        for y = tileY, 53, action do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
+                    getBot():findPath(x,y)
+                    sleep(30)
+                    customizable.reconnect(threads,doorfarmList,x,y)
+                    if splice then
+                        if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                            break
+                        end
+                        while getTile(x,y).fg ~= seed do
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                        while getTile(x,y).fg == seed do
+                            getBot():place(x,y,seedsplice)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    else
+                        if getBot():getInventory():getItemCount(seed) == 0 then
+                            break
+                        end
+                        if getTile(x,y).fg ~= seed then
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    end
+                end
+                if splice then
+                    if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,doorfarmList)
+                        customizable.initializeBots()
+                        goto BACK
+                    end
+                else
+                    if getBot():getInventory():getItemCount(seed) == 0 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) == 0 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        print("["..pcallBot.."]Planting")
+                        customizable.warp(threads,doorfarmList)
+                        customizable.initializeBots()
+                        goto BACK
+                    end
+                end
+            end
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
+                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
+            end
+        end
+    end
+end
+
+customizable.growScan = function(id)
+    count = 0
+    for _,tile in pairs(getBot():getWorld():getTiles()) do
+        if tile.fg == id then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+customizable.writeFile = function(threads)
+    local file = io.open("WorldStatus.txt","a")
+    file:write(threads.."\n")
+    file:close()
+end
+
+if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq" and scriptVersion == "0.2" then
     while getBot().status ~= BotStatus.online do
         getBot():connect()
         sleep(delayreconnect * 1000)
     end
     sleep(pcallBot * delayexecute * 1000)
-    while true do
-        if not looping then
-            customizable.onTake()
-            customizable.onStoring()
-        else
-            while not customizable.realizm() do
-                customizable.onTake()
-                sleep(delaylooping * 1000)
-            end
-            customizable.onStoring()
+    if splice then
+        if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+            customizable.onTake(threads)
+        end
+    else
+        if getBot():getInventory():getItemCount(seed) == 0 then
+            customizable.onTake(threads)
         end
     end
+    if not multiplebot then
+        for idx , value in ipairs(worlds) do
+            local world = customizable.split(value,"[^|]+")[1]
+            local door = customizable.split(value,"[^|]+")[2]
+            if door ~= nil then
+                customizable.warp(world,door)
+            else
+                customizable.warp(world,doorfarmList)
+            end
+            customizable.initializeBots()
+            if not loggoning then
+                if not subserver then
+                    if not nuked then
+                        if not wrong then
+                            local formTime = os.time()
+                            customizable.plant(value)
+                            for i = 1, 2 do
+                                customizable.recheckWorld(value)
+                            end
+                            local formattedTime = os.time() - formTime
+                            if not splice then
+                                initialize[value] = customizable.growScan(seed).." | "..math.floor(formattedTime/60).." Minutes"
+                            else
+                                initialize[value] = math.floor(formattedTime/60).." Minutes"
+                            end
+                        else
+                            customizable.writeFile("("..world..") is wrong id")
+                            wrong = false
+                            print("["..pcallBot.."]("..world..") is wrong door id, skipped world")
+                            customizable.botStatics("("..world..") is wrong door id, skipped world","Script status : Running")
+                        end
+                    else
+                        customizable.writeFile("("..world..") is NUKED !!")
+                        nuked = false
+                        print("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
+                        customizable.botStatics("("..world..") is NUKED!, check ur world","Script status : Running")
+                    end
+                else
+                    subserver = false
+                    customizable.botStatics(""..getBot().name.." system is subserver, sleeping on "..delayidiotserver.." minutes","Status Script : Running")
+                    sleep(delayidiotserver * 60000)
+                end
+            else
+                loggoning = false
+                customizable.botStatics(""..getBot().name.." system is Too many login, sleeping on "..delayidiotserver.." minutes","Status Script : Running")
+                sleep(delayidiotserver * 60000)
+            end
+        end
+    else
+        for idx, value in pairs(farmList) do
+            local world = customizable.split(value,"[^|]+")[1]
+            local door = customizable.split(value,"[^|]+")[2]
+            if door ~= nil then
+                customizable.warp(world,door)
+            else
+                customizable.warp(world,doorfarmList)
+            end
+            customizable.initializeBots()
+            if not loggoning then
+                if not subserver then
+                    if not nuked then
+                        if not wrong then
+                            local formTime = os.time()
+                            customizable.plant(value)
+                            for i = 1, 2 do
+                                customizable.recheckWorld(value)
+                            end
+                            local formattedTime = os.time() - formTime
+                            if not splice then
+                                initialize[value] = customizable.growScan(seed).." | "..math.floor(formattedTime/60).." Minutes"
+                            else
+                                initialize[value] = math.floor(formattedTime/60).." Minutes"
+                            end
+                        else
+                            customizable.writeFile("("..world..") is wrong id")
+                            wrong = false
+                            print("["..pcallBot.."]("..world..") is wrong door id, skipped world")
+                            customizable.botStatics("("..world..") is wrong door id, skipped world","Script status : Running")
+                        end
+                    else
+                        customizable.writeFile("("..world..") is NUKED !!")
+                        nuked = false
+                        print("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
+                        customizable.botStatics("("..world..") is NUKED!, check ur world","Script status : Running")
+                    end
+                else
+                    subserver = false
+                    customizable.botStatics(""..getBot().name.." system is subserver, sleeping on "..delayidiotserver.." minutes","Status Script : Running")
+                    sleep(delayidiotserver * 60000)
+                end
+            else
+                loggoning = false
+                customizable.botStatics(""..getBot().name.." system is Too many login, sleeping on "..delayidiotserver.." minutes","Status Script : Running")
+                sleep(delayidiotserver * 60000)
+            end
+        end
+    end
+    print("["..pcallBot.."]finished all world, terminated script!")
+    customizable.botStatics(""..getBot().name.." finished all world","Script status : Stoped, Reason : Finished all world")
+    customizable.warp(customizable.randomLetter(),"")
+    customizable.initializeBots()
+    if removingbot then
+        removeBot()
+        sleep(2000)
+    end
 else
-    print("["..pcallBot.."]Script Move WTW made by Caramoy Syndicate, Link Server : https://discord.com/invite/fTTKW8vvuq")
-    customizable.botStatics("Script Move WTW made by Caramoy Syndicate, Link Server : https://discord.com/invite/fTTKW8vvuq","Status Script : Stopped, Reason : Reseller idiot")
+    print("["..pcallBot.."]Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq")
+    customizable.botStatics("Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq","Script status : Stopped, Reason : Reseller idiot")
 end
