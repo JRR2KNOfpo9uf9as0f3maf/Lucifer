@@ -944,9 +944,9 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                             end
                             local formattedTime = os.time() - formTime
                             if not splice then
-                                initialize[value] = customizable.growScan(seed).." | "..math.floor(formattedTime/60).." Minutes"
+                                initialize[world] = customizable.growScan(seed).." | "..math.floor(formattedTime/60).." Minutes"
                             else
-                                initialize[value] = math.floor(formattedTime/60).." Minutes"
+                                initialize[world] = math.floor(formattedTime/60).." Minutes"
                             end
                         else
                             customizable.writeFile("("..world..") is wrong id")
@@ -992,9 +992,9 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                             end
                             local formattedTime = os.time() - formTime
                             if not splice then
-                                initialize[value] = customizable.growScan(seed).." | "..math.floor(formattedTime/60).." Minutes"
+                                initialize[world] = customizable.growScan(seed).." | "..math.floor(formattedTime/60).." Minutes"
                             else
-                                initialize[value] = math.floor(formattedTime/60).." Minutes"
+                                initialize[world] = math.floor(formattedTime/60).." Minutes"
                             end
                         else
                             customizable.writeFile("("..world..") is wrong id")
