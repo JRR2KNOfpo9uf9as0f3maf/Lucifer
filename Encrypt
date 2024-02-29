@@ -369,16 +369,17 @@ customizable.onTake = function(threads)
                             if customizable.itemFloat(seed) == 0 and not looping then
                                 initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
                                 customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
-                                customizable.notifications("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
+                                print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
                                 customizable.indexTake = customizable.indexTake + 1
                                 if customizable.indexTake > #storage then
                                     initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
                                     customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seed storage is limit")
                                     customizable.initializeBots()
-                                    customizable.warp(customizable.randomLetter(),"")
                                     if removingbot then
                                         removeBot()
                                         sleep(2000)
+                                    else
+                                        customizable.warp(customizable.randomLetter(),"")
                                     end
                                     customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
                                     getBot():stopScript()
@@ -403,7 +404,7 @@ customizable.onTake = function(threads)
                             if customizable.itemFloat(seed) == 0 or customizable.itemFloat(seedsplice) == 0 and not looping then
                                 initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
                                 customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
-                                customizable.notifications("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
+                                print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
                                 customizable.indexTake = customizable.indexTake + 1
                                 if customizable.indexTake > #storage then
                                     initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
@@ -413,6 +414,8 @@ customizable.onTake = function(threads)
                                     if removingbot then
                                         removeBot()
                                         sleep(2000)
+                                    else
+                                        customizable.warp(customizable.randomLetter(),"")
                                     end
                                     customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
                                     getBot():stopScript()
@@ -451,7 +454,7 @@ customizable.onTake = function(threads)
                         initialize[world] = "WRONG DOOR ID"
                         wrong = false
                         customizable.botStatics("Seeds storage : ||"..world.."|| is wrong door id, skipped world","Script status : Running")
-                        customizable.notifications("["..pcallBot.."]Seeds storage : ("..world..") is wrong door id, skipped world")
+                        print("["..pcallBot.."]Seeds storage : ("..world..") is wrong door id, skipped world")
                         customizable.indexTake = customizable.indexTake + 1
                         if customizable.indexTake > #storage then
                             customizable.botStatics("All seeds storage has empty","Script status : Stopped, Reason : All seeds storage is empty")
@@ -459,6 +462,8 @@ customizable.onTake = function(threads)
                             if removingbot then
                                 removeBot()
                                 sleep(2000)
+                            else
+                                customizable.warp(customizable.randomLetter(),"")
                             end
                             customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script")
                             getBot():stopScript()
@@ -468,7 +473,7 @@ customizable.onTake = function(threads)
                     initialize[world] = "NUKED"
                     nuked = false
                     customizable.botStatics("Seeds storage : ||"..world.."|| is NUKED, skipped world","Script status : Running")
-                    customizable.notifications("["..pcallBot.."]Seeds storage : ("..world..") is NUKED, skipped world")
+                    print("["..pcallBot.."]Seeds storage : ("..world..") is NUKED, skipped world")
                     customizable.indexTake = customizable.indexTake + 1
                     if customizable.indexTake > #storage then
                         customizable.botStatics("All seeds storage has empty, terminated script","Script status : Stopped, Reason : All seed storage is empty")
@@ -476,6 +481,8 @@ customizable.onTake = function(threads)
                         if removingbot then
                             removeBot()
                             sleep(2000)
+                        else
+                            customizable.warp(customizable.randomLetter(),"")
                         end
                         customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script")
                         getBot():stopScript()
@@ -940,13 +947,13 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                         else
                             customizable.writeFile("("..world..") is wrong id")
                             wrong = false
-                            customizable.notifications("["..pcallBot.."]("..world..") is wrong door id, skipped world")
+                            print("["..pcallBot.."]("..world..") is wrong door id, skipped world")
                             customizable.botStatics("("..world..") is wrong door id, skipped world","Script status : Running")
                         end
                     else
                         customizable.writeFile("("..world..") is NUKED !!")
                         nuked = false
-                        customizable.notifications("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
+                        print("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
                         customizable.botStatics("("..world..") is NUKED!, check ur world","Script status : Running")
                     end
                 else
@@ -988,13 +995,13 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                         else
                             customizable.writeFile("("..world..") is wrong id")
                             wrong = false
-                            customizable.notifications("["..pcallBot.."]("..world..") is wrong door id, skipped world")
+                            print("["..pcallBot.."]("..world..") is wrong door id, skipped world")
                             customizable.botStatics("("..world..") is wrong door id, skipped world","Script status : Running")
                         end
                     else
                         customizable.writeFile("("..world..") is NUKED !!")
                         nuked = false
-                        customizable.notifications("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
+                        print("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
                         customizable.botStatics("("..world..") is NUKED!, check ur world","Script status : Running")
                     end
                 else
@@ -1018,6 +1025,6 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
     end
     customizable.notifications("["..pcallBot.."]finished all world, terminated script!")
 else
-    customizable.notifications("["..pcallBot.."]Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq")
     customizable.botStatics("Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq","Script status : Stopped, Reason : Reseller idiot")
+    customizable.notifications("["..pcallBot.."]Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq")
 end
