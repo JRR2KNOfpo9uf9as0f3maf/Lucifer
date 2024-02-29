@@ -6,8 +6,9 @@ end
 
 initialize = {}
 worlds = {}
-botAction = {}
 reversed = {}
+botTile = {}
+initPosition = 5
 local customizable = {
     indexTake = 1,
     indexMessage = 1,
@@ -16,11 +17,11 @@ local customizable = {
 local tileY = 1 + ((pcallBot - 1) * 2)
 local action = #getBots() * 2
 local increment = 1 * 2 * 3
-identity = 5
 getBot().auto_reconnect = false
 getBot().legit_mode = false
 getBot().move_range = moveRange
 getBot().move_interval = moveInterval
+
 for i =  1,worldperbot do
     table.insert(worlds,farmList[math.floor((pcallBot - 1) * worldperbot + i)])
 end
@@ -29,40 +30,20 @@ for i =  1,customizable.indexMessage do
     table.insert(reversed,messageidbotinfo[math.floor((pcallBot - 1) * customizable.indexMessage + i)])
 end
 
-for x = math.floor(identity/2),1,-1 do
+customizable.notifications = function(desc)
+    messageBox = MessageBox.new()
+    messageBox.title = "Caramoy Syndicate"
+    messageBox.description = desc
+    messageBox:send()
+end
+
+for x = math.floor(initPosition/2),1,-1 do
     x = x * -1
-    table.insert(botAction,x)
+    table.insert(botTile,x)
 end
 
-for x = 0, math.ceil(identity/2) - 1 do
-    table.insert(botAction,x)
-end
-
-customizable.placeTop = function(ex,ye)
-    for _,idx in pairs(botAction) do
-        if getTile(ex + idx,ye - 2).fg ~= seed then
-            return true
-        end
-    end
-    return false
-end
-
-customizable.placeDown = function(x,y)
-    for _,idx in pairs(botAction) do
-        if getTile(x + idx,y + 2).fg ~= seed then
-            return true
-        end
-    end
-    return false
-end
-
-customizable.placeBot = function(x,y)
-    for _,idx in pairs(botAction) do
-        if getTile(x + idx,y).fg ~= seed then
-            return true
-        end
-    end
-    return false
+for x = 0, math.ceil(initPosition/2) - 1 do
+    table.insert(botTile,x)
 end
 
 customizable.randomLetter = function()
@@ -361,6 +342,15 @@ customizable.warp = function(world,door)
     end
 end
 
+customizable.placeFarmable = function(x,y,str)
+    for _,idx in pairs(botTile) do
+        if getTile(x + idx,y + str).fg == 0 then
+            return true
+        end
+    end
+    return false
+end
+
 customizable.itemFloat = function(id)
     return getBot():getWorld().growscan:getObjects()[id] or 0
 end
@@ -379,18 +369,18 @@ customizable.onTake = function(threads)
                             if customizable.itemFloat(seed) == 0 and not looping then
                                 initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
                                 customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
-                                print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
+                                customizable.notifications("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
                                 customizable.indexTake = customizable.indexTake + 1
                                 if customizable.indexTake > #storage then
                                     initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
                                     customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seed storage is limit")
-                                    print("["..pcallBot.."]All seeds storage has empty, terminated script ")
                                     customizable.initializeBots()
                                     customizable.warp(customizable.randomLetter(),"")
                                     if removingbot then
                                         removeBot()
                                         sleep(2000)
                                     end
+                                    customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
                                     getBot():stopScript()
                                 end
                             else
@@ -402,7 +392,7 @@ customizable.onTake = function(threads)
                                         sleep(1000)
                                         customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
                                     end
-                                    if getBot():getInventory():getItemCount(seed) >= 15 then
+                                    if getBot():getInventory():getItemCount(seed) > 15 then
                                         break
                                     end
                                 end
@@ -413,17 +403,18 @@ customizable.onTake = function(threads)
                             if customizable.itemFloat(seed) == 0 or customizable.itemFloat(seedsplice) == 0 and not looping then
                                 initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
                                 customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
-                                print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
+                                customizable.notifications("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
                                 customizable.indexTake = customizable.indexTake + 1
                                 if customizable.indexTake > #storage then
                                     initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
                                     customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seeds storage is empty")
-                                    print("["..pcallBot.."]All seeds storage has empty, terminated script ")
                                     customizable.initializeBots()
+                                    customizable.warp(customizable.randomLetter(),"")
                                     if removingbot then
                                         removeBot()
                                         sleep(2000)
                                     end
+                                    customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
                                     getBot():stopScript()
                                 end
                             else
@@ -435,7 +426,7 @@ customizable.onTake = function(threads)
                                         sleep(1000)
                                         customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
                                     end
-                                    if getBot():getInventory():getItemCount(seed) >= 15 then
+                                    if getBot():getInventory():getItemCount(seed) > 15 then
                                         break
                                     end
                                 end
@@ -448,7 +439,7 @@ customizable.onTake = function(threads)
                                         sleep(1000)
                                         customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
                                     end
-                                    if getBot():getInventory():getItemCount(seedsplice) >= 15 then
+                                    if getBot():getInventory():getItemCount(seedsplice) > 15 then
                                         break
                                     end
                                 end
@@ -460,15 +451,16 @@ customizable.onTake = function(threads)
                         initialize[world] = "WRONG DOOR ID"
                         wrong = false
                         customizable.botStatics("Seeds storage : ||"..world.."|| is wrong door id, skipped world","Script status : Running")
-                        print("["..pcallBot.."]Seeds storage : ("..world..") is wrong door id, skipped world")
+                        customizable.notifications("["..pcallBot.."]Seeds storage : ("..world..") is wrong door id, skipped world")
                         customizable.indexTake = customizable.indexTake + 1
                         if customizable.indexTake > #storage then
                             customizable.botStatics("All seeds storage has empty","Script status : Stopped, Reason : All seeds storage is empty")
-                            print("["..pcallBot.."]All seeds storage has empty, terminated script")
+                            customizable.warp(customizable.randomLetter(),"")
                             if removingbot then
                                 removeBot()
                                 sleep(2000)
                             end
+                            customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script")
                             getBot():stopScript()
                         end
                     end
@@ -476,15 +468,16 @@ customizable.onTake = function(threads)
                     initialize[world] = "NUKED"
                     nuked = false
                     customizable.botStatics("Seeds storage : ||"..world.."|| is NUKED, skipped world","Script status : Running")
-                    print("["..pcallBot.."]Seeds storage : ("..world..") is NUKED, skipped world")
+                    customizable.notifications("["..pcallBot.."]Seeds storage : ("..world..") is NUKED, skipped world")
                     customizable.indexTake = customizable.indexTake + 1
                     if customizable.indexTake > #storage then
                         customizable.botStatics("All seeds storage has empty, terminated script","Script status : Stopped, Reason : All seed storage is empty")
-                        print("["..pcallBot.."]All seeds storage has empty, terminated script")
+                        customizable.warp(customizable.randomLetter(),"")
                         if removingbot then
                             removeBot()
                             sleep(2000)
                         end
+                        customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script")
                         getBot():stopScript()
                     end
                 end
@@ -506,7 +499,7 @@ customizable.onTake = function(threads)
     end
 end
 
-customizable.pattern = function(world,id,ex,ye)
+customizable.pattern = function(world,id)
     botX = getBot().x
     botY = getBot().y
     if botX == 1 then
@@ -521,86 +514,92 @@ customizable.pattern = function(world,id,ex,ye)
         botX = botX + 3
         getBot():findPath(botX,botY)
         sleep(100)
-    elseif getTile(botX - 1, botY).fg ~= 0 then
-        botX = botX + 2
-        getBot():findPath(botX,botY)
-        sleep(100)
-    elseif getTile(botX - 2, botY).fg ~= 0 then
-        botX = botX + 1
-        getBot():findPath(botX,botY)
-        sleep(100)
     end
-    if getBot():getInventory():getItemCount(seed) >= 15 then
-        for idx = -2 , 2 do
-            local count1 = 0
-            while getTile(botX - idx,botY - 2).fg ~= seed do
-                getBot():place(botX - idx,botY - 2,seed)
+    local count = 0
+    while customizable.placeFarmable(botX,botY,-2) do
+        for _,i in pairs(botTile) do
+            if getTile(botX + i,botY - 2).fg == 0 then
+                getBot():place(botX + i,botY - 2,seed)
                 sleep(delayplant)
-                customizable.reconnect(world,id,ex,ye)
-                count1 = count1 + 1
-                if count1 > 5 then
-                    break
-                end
+                customizable.reconnect(world,id,botX,botY)
             end
-            sleep(delayplant)
-            local count2 = 0
-            while getTile(botX - idx,botY).fg ~= seed do
-                getBot():place(botX - idx,botY,seed)
+        end
+        count = count + 1
+        if count >= 25 then
+            count = 0
+            break
+        end
+    end
+    while customizable.placeFarmable(botX,botY,0) do
+        for _,i in pairs(botTile) do
+            if getTile(botX+i,botY).fg == 0 then
+                getBot():place(botX+i,botY,seed)
                 sleep(delayplant)
-                customizable.reconnect(world,id,ex,ye)
-                count2 = count2 + 1
-                if count2 > 5 then
-                    break
-                end
+                customizable.reconnect(world,id,botX,botY)
             end
-            sleep(delayplant)
-            local count3 = 0
-            while getTile(botX - idx,botY+2).fg ~= seed do
-                getBot():place(botX - idx,botY+2,seed)
+        end
+        count = count + 1
+        if count >= 25 then
+            count = 0
+            break
+        end
+    end
+    while customizable.placeFarmable(botX,botY,2) do
+        for _,i in pairs(botTile) do
+            if getTile(botX+i,botY + 2).fg == 0 then
+                getBot():place(botX+i,botY + 2,seed)
                 sleep(delayplant)
-                customizable.reconnect(world,id,ex,ye)
-                count3 = count3 + 1
-                if count3 > 5 then
-                    break
-                end
+                customizable.reconnect(world,id,botX,botY)
             end
+        end
+        count = count + 1
+        if count >= 25 then
+            count = 0
+            break
         end
     end
     if splice then
-        if getBot():getInventory():getItemCount(seedsplice) >= 15 then
-            for idx = -2 , 2 do
-                local count1 = 0
-                while getTile(botX - idx,botY - 2).fg == seed do
-                    getBot():place(botX - idx,botY - 2,seedsplice)
+        local count = 0
+        while customizable.placeFarmable(botX,botY,-2) do
+            for _,i in pairs(botTile) do
+                if getTile(botX + i,botY - 2).fg == seed then
+                    getBot():place(botX + i,botY - 2,seedsplice)
                     sleep(delayplant)
-                    customizable.reconnect(world,id,ex,ye)
-                    count1 = count1 + 1
-                    if count1 > 5 then
-                        break
-                    end
+                    customizable.reconnect(world,id,botX,botY)
                 end
-                sleep(delayplant)
-                local count2 = 0
-                while getTile(botX - idx,botY).fg == seed do
-                    getBot():place(botX - idx,botY,seedsplice)
+            end
+            count = count + 1
+            if count >= 25 then
+                count = 0
+                break
+            end
+        end
+        while customizable.placeFarmable(botX,botY,0) do
+            for _,i in pairs(botTile) do
+                if getTile(botX+i,botY).fg == seed then
+                    getBot():place(botX+i,botY,seedsplice)
                     sleep(delayplant)
-                    customizable.reconnect(world,id,ex,ye)
-                    count2 = count2 + 1
-                    if count2 > 5 then
-                        break
-                    end
+                    customizable.reconnect(world,id,botX,botY)
                 end
-                sleep(delayplant)
-                local count3 = 0
-                while getTile(botX - idx,botY+2).fg == seed do
-                    getBot():place(botX - idx,botY+2,seedsplice)
+            end
+            count = count + 1
+            if count >= 25 then
+                count = 0
+                break
+            end
+        end
+        while customizable.placeFarmable(botX,botY,2) do
+            for _,i in pairs(botTile) do
+                if getTile(botX+i,botY + 2).fg == seed then
+                    getBot():place(botX+i,botY + 2,seedsplice)
                     sleep(delayplant)
-                    customizable.reconnect(world,id,ex,ye)
-                    count3 = count3 + 1
-                    if count3 > 5 then
-                        break
-                    end
+                    customizable.reconnect(world,id,botX,botY)
                 end
+            end
+            count = count + 1
+            if count >= 25 then
+                count = 0
+                break
             end
         end
     end
@@ -616,10 +615,28 @@ customizable.recheckWorld = function(threads)
     if not multiplebot then
         for y = -1 , 53 do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
+                if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
                     getBot():findPath(x,y)
                     sleep(30)
                     customizable.reconnect(threads,doorfarmList,x,y)
+                    if splice then
+                        while getTile(x,y).fg ~= seed do
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                        while getTile(x,y).fg == seed do
+                            getBot():place(x,y,seedsplice)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    else
+                        if getTile(x,y).fg ~= seed then
+                            getBot():place(x,y,seed)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,doorfarmList,x,y)
+                        end
+                    end
                     if splice then
                         if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
                             if looping then
@@ -634,16 +651,6 @@ customizable.recheckWorld = function(threads)
                             customizable.initializeBots()
                             goto BACK
                         end
-                        while getTile(x,y).fg ~= seed do
-                            getBot():place(x,y,seed)
-                            sleep(delayplant)
-                            customizable.reconnect(threads,doorfarmList,x,y)
-                        end
-                        while getTile(x,y).fg == seed do
-                            getBot():place(x,y,seedsplice)
-                            sleep(delayplant)
-                            customizable.reconnect(threads,doorfarmList,x,y)
-                        end
                     else
                         if getBot():getInventory():getItemCount(seed) == 0 then
                             if looping then
@@ -657,11 +664,6 @@ customizable.recheckWorld = function(threads)
                             customizable.warp(threads,doorfarmList)
                             customizable.initializeBots()
                             goto BACK
-                        end
-                        if getTile(x,y).fg ~= seed then
-                            getBot():place(x,y,seed)
-                            sleep(delayplant)
-                            customizable.reconnect(threads,doorfarmList,x,y)
                         end
                     end
                 end
@@ -685,14 +687,11 @@ customizable.recheckWorld = function(threads)
     else
         for y = tileY, 53, action do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
+                if getTile(x, y).fg == 0 and getTile(x, y).flags ~= 0 then
                     getBot():findPath(x,y)
                     sleep(30)
                     customizable.reconnect(threads,doorfarmList,x,y)
                     if splice then
-                        if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
-                            break
-                        end
                         while getTile(x,y).fg ~= seed do
                             getBot():place(x,y,seed)
                             sleep(delayplant)
@@ -704,9 +703,6 @@ customizable.recheckWorld = function(threads)
                             customizable.reconnect(threads,doorfarmList,x,y)
                         end
                     else
-                        if getBot():getInventory():getItemCount(seed) == 0 then
-                            break
-                        end
                         if getTile(x,y).fg ~= seed then
                             getBot():place(x,y,seed)
                             sleep(delayplant)
@@ -773,11 +769,11 @@ customizable.plant = function(threads)
     if not multiplebot then
         for y = 3 , 53, increment do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 and x >= 3 then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and x >= 3 then
                     getBot():findPath(x-2,y)
                     sleep(30)
                     customizable.reconnect(threads,doorfarmList,x-2,y)
-                    customizable.pattern(threads,doorfarmList,x-2,y)
+                    customizable.pattern(threads,doorfarmList)
                 end
                 if splice then
                     if getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 then
@@ -813,14 +809,11 @@ customizable.plant = function(threads)
     else
         for y = tileY, 53, action do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed then
                     getBot():findPath(x,y)
                     sleep(30)
                     customizable.reconnect(threads,doorfarmList,x,y)
                     if splice then
-                        if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
-                            break
-                        end
                         while getTile(x,y).fg ~= seed do
                             getBot():place(x,y,seed)
                             sleep(delayplant)
@@ -832,9 +825,6 @@ customizable.plant = function(threads)
                             customizable.reconnect(threads,doorfarmList,x,y)
                         end
                     else
-                        if getBot():getInventory():getItemCount(seed) == 0 then
-                            break
-                        end
                         if getTile(x,y).fg ~= seed then
                             getBot():place(x,y,seed)
                             sleep(delayplant)
@@ -866,7 +856,6 @@ customizable.plant = function(threads)
                         else
                             customizable.onTake(threads)
                         end
-                        print("["..pcallBot.."]Planting")
                         customizable.warp(threads,doorfarmList)
                         customizable.initializeBots()
                         goto BACK
@@ -951,13 +940,13 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                         else
                             customizable.writeFile("("..world..") is wrong id")
                             wrong = false
-                            print("["..pcallBot.."]("..world..") is wrong door id, skipped world")
+                            customizable.notifications("["..pcallBot.."]("..world..") is wrong door id, skipped world")
                             customizable.botStatics("("..world..") is wrong door id, skipped world","Script status : Running")
                         end
                     else
                         customizable.writeFile("("..world..") is NUKED !!")
                         nuked = false
-                        print("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
+                        customizable.notifications("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
                         customizable.botStatics("("..world..") is NUKED!, check ur world","Script status : Running")
                     end
                 else
@@ -999,13 +988,13 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
                         else
                             customizable.writeFile("("..world..") is wrong id")
                             wrong = false
-                            print("["..pcallBot.."]("..world..") is wrong door id, skipped world")
+                            customizable.notifications("["..pcallBot.."]("..world..") is wrong door id, skipped world")
                             customizable.botStatics("("..world..") is wrong door id, skipped world","Script status : Running")
                         end
                     else
                         customizable.writeFile("("..world..") is NUKED !!")
                         nuked = false
-                        print("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
+                        customizable.notifications("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
                         customizable.botStatics("("..world..") is NUKED!, check ur world","Script status : Running")
                     end
                 else
@@ -1020,7 +1009,6 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
             end
         end
     end
-    print("["..pcallBot.."]finished all world, terminated script!")
     customizable.botStatics(""..getBot().name.." finished all world","Script status : Stoped, Reason : Finished all world")
     customizable.warp(customizable.randomLetter(),"")
     customizable.initializeBots()
@@ -1028,7 +1016,8 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
         removeBot()
         sleep(2000)
     end
+    customizable.notifications("["..pcallBot.."]finished all world, terminated script!")
 else
-    print("["..pcallBot.."]Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq")
+    customizable.notifications("["..pcallBot.."]Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq")
     customizable.botStatics("Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq","Script status : Stopped, Reason : Reseller idiot")
 end
