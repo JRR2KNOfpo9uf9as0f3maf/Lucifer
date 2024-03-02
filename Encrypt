@@ -735,7 +735,7 @@ customizable.writeFile = function(threads)
     file:close()
 end
 
-if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq" and scriptVersion == "0.2" then
+if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : https://discord.com/invite/fTTKW8vvuq" and scriptVersion == "0.3" then
     while getBot().status ~= BotStatus.online do
         getBot():connect()
         sleep(delayreconnect * 1000)
