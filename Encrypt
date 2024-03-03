@@ -525,6 +525,7 @@ customizable.pattern = function(world,id)
             break
         end
     end
+    sleep(delayplant)
     while customizable.placeFarmable(botX,botY,0) do
         for _,i in pairs(botTile) do
             if getTile(botX+i,botY).fg == 0 then
@@ -533,12 +534,14 @@ customizable.pattern = function(world,id)
                 customizable.reconnect(world,id,botX,botY)
             end
         end
+        sleep(delayplant)
         count = count + 1
         if count == 5 then
             count = 0
             break
         end
     end
+    sleep(delayplant)
     while customizable.placeFarmable(botX,botY,2) do
         for _,i in pairs(botTile) do
             if getTile(botX+i,botY + 2).fg == 0 then
@@ -553,6 +556,7 @@ customizable.pattern = function(world,id)
             break
         end
     end
+    sleep(delayplant)
     if splice then
         local count = 0
         while customizable.placeFarmable(botX,botY,-2) do
@@ -569,6 +573,7 @@ customizable.pattern = function(world,id)
                 break
             end
         end
+        sleep(delayplant)
         while customizable.placeFarmable(botX,botY,0) do
             for _,i in pairs(botTile) do
                 if getTile(botX+i,botY).fg == seed then
@@ -583,6 +588,7 @@ customizable.pattern = function(world,id)
                 break
             end
         end
+        sleep(delayplant)
         while customizable.placeFarmable(botX,botY,2) do
             for _,i in pairs(botTile) do
                 if getTile(botX+i,botY + 2).fg == seed then
@@ -597,8 +603,18 @@ customizable.pattern = function(world,id)
                 break
             end
         end
+        sleep(delayplant)
     end
 end
+
+customizable.detectTile = function()
+    for x = 0, 99 do
+        if getTile(x,1).fg ~= 0 and not getTile(x,1):canHarvest() or getTile(x,1):canHarvest() then
+            return true
+        end
+    end
+    return false
+end 
 
 customizable.recheckWorld = function(threads)
     tileA = 99
@@ -606,25 +622,16 @@ customizable.recheckWorld = function(threads)
     tileC = -1
     tileD = 0
     print("["..pcallBot.."]Rechecking")
-    for y = -1 , 53 do
-        for x = tileA, tileB, tileC do
-            if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed then
-                getBot():findPath(x,y)
-                sleep(30)
-                local count = 0
-                customizable.reconnect(threads,door,x,y)
-                while getTile(x,y).fg ~= seed do
-                    getBot():place(x,y,seed)
-                    sleep(delayplant)
+    if customizable.detectTile() then
+        for y = -1 , 53 do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
+                    getBot():findPath(x,y)
+                    sleep(30)
+                    local count = 0
                     customizable.reconnect(threads,door,x,y)
-                    count = count + 1
-                    if count == 5 then
-                        break
-                    end
-                end
-                if splice then
-                    while getTile(x,y).fg == seed do
-                        getBot():place(x,y,seedsplice)
+                    while getTile(x,y).fg ~= seed do
+                        getBot():place(x,y,seed)
                         sleep(delayplant)
                         customizable.reconnect(threads,door,x,y)
                         count = count + 1
@@ -632,51 +639,135 @@ customizable.recheckWorld = function(threads)
                             break
                         end
                     end
+                    if splice then
+                        while getTile(x,y).fg == seed do
+                            getBot():place(x,y,seedsplice)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,door,x,y)
+                            count = count + 1
+                            if count == 5 then
+                                break
+                            end
+                        end
+                    end
+                end
+                if splice then
+                    if getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,door)
+                        customizable.initializeBots()
+                    end
+                else
+                    if getBot():getInventory():getItemCount(seed) <= 15 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) <= 15 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,door)
+                        customizable.initializeBots()
+                    end
                 end
             end
-            if splice then
-                if getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 then
-                    if looping then
-                        while getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 do
-                            customizable.onTake(threads)
-                            sleep(delaylooping * 1000)
-                        end
-                    else
-                        customizable.onTake(threads)
-                    end
-                    customizable.warp(threads,door)
-                    customizable.initializeBots()
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
                 end
-            else
-                if getBot():getInventory():getItemCount(seed) <= 15 then
-                    if looping then
-                        while getBot():getInventory():getItemCount(seed) <= 15 do
-                            customizable.onTake(threads)
-                            sleep(delaylooping * 1000)
-                        end
-                    else
-                        customizable.onTake(threads)
-                    end
-                    customizable.warp(threads,door)
-                    customizable.initializeBots()
-                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
             end
         end
-        if tileD == 1 then
-            if tileA == 0 then
-                tileA = 99
-                tileB = 0
-                tileC = -1
-                tileD = 0
-            elseif tileA == 99 then
-                tileA = 0
-                tileB = 99
-                tileC = 1
-                tileD = 0
+    else
+        for y = -1 , 53 do
+            for x = tileA, tileB, tileC do
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed then
+                    getBot():findPath(x,y)
+                    sleep(30)
+                    local count = 0
+                    customizable.reconnect(threads,door,x,y)
+                    while getTile(x,y).fg ~= seed do
+                        getBot():place(x,y,seed)
+                        sleep(delayplant)
+                        customizable.reconnect(threads,door,x,y)
+                        count = count + 1
+                        if count == 5 then
+                            break
+                        end
+                    end
+                    if splice then
+                        while getTile(x,y).fg == seed do
+                            getBot():place(x,y,seedsplice)
+                            sleep(delayplant)
+                            customizable.reconnect(threads,door,x,y)
+                            count = count + 1
+                            if count == 5 then
+                                break
+                            end
+                        end
+                    end
+                end
+                if splice then
+                    if getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,door)
+                        customizable.initializeBots()
+                    end
+                else
+                    if getBot():getInventory():getItemCount(seed) <= 15 then
+                        if looping then
+                            while getBot():getInventory():getItemCount(seed) <= 15 do
+                                customizable.onTake(threads)
+                                sleep(delaylooping * 1000)
+                            end
+                        else
+                            customizable.onTake(threads)
+                        end
+                        customizable.warp(threads,door)
+                        customizable.initializeBots()
+                    end
+                end
             end
-        elseif tileD == 0 then
-            tileD = tileD + 1
-        end
+            if tileD == 1 then
+                if tileA == 0 then
+                    tileA = 99
+                    tileB = 0
+                    tileC = -1
+                    tileD = 0
+                elseif tileA == 99 then
+                    tileA = 0
+                    tileB = 99
+                    tileC = 1
+                    tileD = 0
+                end
+            elseif tileD == 0 then
+                tileD = tileD + 1
+            end
+        end 
     end
 end
 
@@ -684,7 +775,6 @@ customizable.plant = function(threads)
     tileA = 99
     tileB = 0
     tileC = -1
-    tileD = 0
     print("["..pcallBot.."]Planting")
     for val = 2,3 do
         for y = val, 53, increment do
