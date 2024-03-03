@@ -224,12 +224,12 @@ customizable.reconnect = function(world,id,x,y)
             end
         end
         while not getBot():isInWorld(world:upper()) do
-            getBot():sendPacket(3,"action|join_request\nname|"..world:upper().."\ninvitedWorld|0")
+            getBot():warp(world:upper())
             sleep(delaywarp * 1000)
         end
         if id ~= "" then
             while getTile(getBot().x,getBot().y).fg == 6 do
-                getBot():sendPacket(3,"action|join_request\nname|" ..world:upper().."|"..id:upper().."\ninvitedWorld|0")
+                getBot():warp(world:upper(),id:upper())
                 sleep(delaywarp * 1000)
             end
         end
@@ -255,17 +255,10 @@ customizable.warp = function(world,door)
                 if variant:get(1):getString():lower():find("inaccessible.") or variant:get(1):getString():lower():find("unknown reason.") then
                     nuked = true
                 end
-                if variant:get(1):getString():lower():find("experiencing") or variant:get(1):getString():lower():find("high demand") then
-                    subserver = true
-                end
             end
         end)
-        while not getBot():isInWorld(world:upper()) and not subserver and not nuked do
+        while not getBot():isInWorld(world:upper()) and not nuked do
             if getBot().status == BotStatus.online and getBot():getPing() == 0 then
-                getBot():disconnect()
-                sleep(2000)
-            end
-            if getBot():isInWorld("EXIT") and not subserver and not nuked then
                 getBot():disconnect()
                 sleep(2000)
             end
@@ -285,7 +278,7 @@ customizable.warp = function(world,door)
                 end
                 customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
             end
-            getBot():sendPacket(3,"action|join_request\nname|"..name.."\ninvitedWorld|0")
+            getBot():warp(name)
             listenEvents(3)
             count = count + 1
             if count < 5 then
@@ -305,10 +298,6 @@ customizable.warp = function(world,door)
                     getBot():disconnect()
                     sleep(2000)
                 end
-                if getBot():isInWorld("EXIT") and not subserver and not nuked then
-                    getBot():disconnect()
-                    sleep(2000)
-                end
                 if getBot().status ~= BotStatus.online then
                     customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
                     while getBot().status ~= BotStatus.online do
@@ -325,7 +314,7 @@ customizable.warp = function(world,door)
                     end
                     customizable.botStatics(""..getBot().name.." status is "..customizable.initBot().."","Status Script : Running")
                 end
-                getBot():sendPacket(3,"action|join_request\nname|"..name.."\ninvitedWorld|0")
+                getBot():warp(name)
                 sleep(delaywarp * 1000)
                 stuck = stuck + 1
                 if stuck == 5 then
@@ -355,121 +344,101 @@ customizable.onTake = function(threads)
         door = customizable.split(storage[i],"[^|]+")[2]
         customizable.warp(world,door)
         customizable.initializeBots()
-        if not subserver then
-            if not nuked then
-                if not wrong then
-                    if not splice then
-                        if customizable.itemFloat(seed) == 0 and not looping then
+        if not nuked then
+            if not wrong then
+                if not splice then
+                    if customizable.itemFloat(seed) == 0 and not looping then
+                        initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
+                        customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
+                        print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
+                        customizable.indexTake = customizable.indexTake + 1
+                        if customizable.indexTake > #storage then
                             initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
-                            customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
-                            print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
-                            customizable.indexTake = customizable.indexTake + 1
-                            if customizable.indexTake > #storage then
-                                initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
-                                customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seed storage is limit")
-                                customizable.initializeBots()
-                                if removingbot then
-                                    removeBot()
-                                    sleep(2000)
-                                else
-                                    customizable.warp(customizable.randomLetter(),"")
-                                end
-                                customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
-                                getBot():stopScript()
+                            customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seed storage is limit")
+                            customizable.initializeBots()
+                            if removingbot then
+                                removeBot()
+                                sleep(2000)
+                            else
+                                customizable.warp(customizable.randomLetter(),"")
                             end
-                        else
-                            for _, object in pairs(getBot():getWorld():getObjects()) do
-                                if object.id == seed then
-                                    getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
-                                    sleep(100)
-                                    getBot():collect(2)
-                                    sleep(1000)
-                                    customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
-                                end
-                                if getBot():getInventory():getItemCount(seed) > 15 then
-                                    break
-                                end
-                            end
-                            sleep(100)
-                            break
+                            customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
+                            getBot():stopScript()
                         end
                     else
-                        if customizable.itemFloat(seed) == 0 or customizable.itemFloat(seedsplice) == 0 and not looping then
-                            initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
-                            customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
-                            print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
-                            customizable.indexTake = customizable.indexTake + 1
-                            if customizable.indexTake > #storage then
-                                initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
-                                customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seeds storage is empty")
-                                customizable.initializeBots()
-                                customizable.warp(customizable.randomLetter(),"")
-                                if removingbot then
-                                    removeBot()
-                                    sleep(2000)
-                                else
-                                    customizable.warp(customizable.randomLetter(),"")
-                                end
-                                customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
-                                getBot():stopScript()
+                        for _, object in pairs(getBot():getWorld():getObjects()) do
+                            if object.id == seed then
+                                getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
+                                sleep(100)
+                                getBot():collect(2)
+                                sleep(1000)
+                                customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
                             end
-                        else
-                            for _, object in pairs(getBot():getWorld():getObjects()) do
-                                if object.id == seed then
-                                    getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
-                                    sleep(100)
-                                    getBot():collect(2)
-                                    sleep(1000)
-                                    customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
-                                end
-                                if getBot():getInventory():getItemCount(seed) > 15 then
-                                    break
-                                end
+                            if getBot():getInventory():getItemCount(seed) > 15 then
+                                break
                             end
-                            sleep(1000)
-                            for _, object in pairs(getBot():getWorld():getObjects()) do
-                                if object.id == seedsplice then
-                                    getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
-                                    sleep(100)
-                                    getBot():collect(2)
-                                    sleep(1000)
-                                    customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
-                                end
-                                if getBot():getInventory():getItemCount(seedsplice) > 15 then
-                                    break
-                                end
-                            end
-                            sleep(100)
-                            break
                         end
+                        sleep(100)
+                        break
                     end
                 else
-                    initialize[world] = "WRONG DOOR ID"
-                    wrong = false
-                    customizable.botStatics("Seeds storage : ||"..world.."|| is wrong door id, skipped world","Script status : Running")
-                    print("["..pcallBot.."]Seeds storage : ("..world..") is wrong door id, skipped world")
-                    customizable.indexTake = customizable.indexTake + 1
-                    if customizable.indexTake > #storage then
-                        customizable.botStatics("All seeds storage has empty","Script status : Stopped, Reason : All seeds storage is empty")
-                        customizable.warp(customizable.randomLetter(),"")
-                        if removingbot then
-                            removeBot()
-                            sleep(2000)
-                        else
+                    if customizable.itemFloat(seed) == 0 or customizable.itemFloat(seedsplice) == 0 and not looping then
+                        initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
+                        customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
+                        print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
+                        customizable.indexTake = customizable.indexTake + 1
+                        if customizable.indexTake > #storage then
+                            initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
+                            customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seeds storage is empty")
+                            customizable.initializeBots()
                             customizable.warp(customizable.randomLetter(),"")
+                            if removingbot then
+                                removeBot()
+                                sleep(2000)
+                            else
+                                customizable.warp(customizable.randomLetter(),"")
+                            end
+                            customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
+                            getBot():stopScript()
                         end
-                        customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script")
-                        getBot():stopScript()
+                    else
+                        for _, object in pairs(getBot():getWorld():getObjects()) do
+                            if object.id == seed then
+                                getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
+                                sleep(100)
+                                getBot():collect(2)
+                                sleep(1000)
+                                customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
+                            end
+                            if getBot():getInventory():getItemCount(seed) > 15 then
+                                break
+                            end
+                        end
+                        sleep(1000)
+                        for _, object in pairs(getBot():getWorld():getObjects()) do
+                            if object.id == seedsplice then
+                                getBot():findPath(math.floor((object.x)/32), math.floor((object.y)/32))
+                                sleep(100)
+                                getBot():collect(2)
+                                sleep(1000)
+                                customizable.reconnect(world,door,math.floor((object.x)/32), math.floor((object.y)/32))
+                            end
+                            if getBot():getInventory():getItemCount(seedsplice) > 15 then
+                                break
+                            end
+                        end
+                        sleep(100)
+                        break
                     end
                 end
             else
-                initialize[world] = "NUKED"
-                nuked = false
-                customizable.botStatics("Seeds storage : ||"..world.."|| is NUKED, skipped world","Script status : Running")
-                print("["..pcallBot.."]Seeds storage : ("..world..") is NUKED, skipped world")
+                initialize[world] = "WRONG DOOR ID"
+                wrong = false
+                customizable.botStatics("Seeds storage : ||"..world.."|| is wrong door id, skipped world","Script status : Running")
+                print("["..pcallBot.."]Seeds storage : ("..world..") is wrong door id, skipped world")
                 customizable.indexTake = customizable.indexTake + 1
                 if customizable.indexTake > #storage then
-                    customizable.botStatics("All seeds storage has empty, terminated script","Script status : Stopped, Reason : All seed storage is empty")
+                    customizable.botStatics("All seeds storage has empty","Script status : Stopped, Reason : All seeds storage is empty")
                     customizable.warp(customizable.randomLetter(),"")
                     if removingbot then
                         removeBot()
@@ -482,9 +451,23 @@ customizable.onTake = function(threads)
                 end
             end
         else
-            subserver = false
-            customizable.botStatics(""..getBot().name.." system is subserver, sleeping on "..delayidiotserver.." minutes","Status Script : Running")
-            sleep(delayidiotserver * 60000)
+            initialize[world] = "NUKED"
+            nuked = false
+            customizable.botStatics("Seeds storage : ||"..world.."|| is NUKED, skipped world","Script status : Running")
+            print("["..pcallBot.."]Seeds storage : ("..world..") is NUKED, skipped world")
+            customizable.indexTake = customizable.indexTake + 1
+            if customizable.indexTake > #storage then
+                customizable.botStatics("All seeds storage has empty, terminated script","Script status : Stopped, Reason : All seed storage is empty")
+                customizable.warp(customizable.randomLetter(),"")
+                if removingbot then
+                    removeBot()
+                    sleep(2000)
+                else
+                    customizable.warp(customizable.randomLetter(),"")
+                end
+                customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script")
+                getBot():stopScript()
+            end
         end
     end
     if not splice then
@@ -609,7 +592,7 @@ end
 
 customizable.detectTile = function()
     for x = 0, 99 do
-        if getTile(x,1).fg ~= 0 and not getTile(x,1):canHarvest() or getTile(x,1):canHarvest() then
+        if getTile(x,1):canHarvest() or not getTile(x,1):canHarvest() then
             return true
         end
     end
@@ -853,36 +836,30 @@ if Information == "Script Plant made by Caramoy's Syndicate, Link Discord : http
         local door = customizable.split(assign[idx],"[^|]+")[2]
         customizable.warp(world,door)
         customizable.initializeBots()
-        if not subserver then
-            if not nuked then
-                if not wrong then
-                    local formTime = os.time()
-                    customizable.plant(assign[idx])
-                    for i = 1, 2 do
-                        customizable.recheckWorld(assign[idx])
-                    end
-                    local formattedTime = os.time() - formTime
-                    if not splice then
-                        initialize[world] = customizable.growScan(seed).." | "..math.floor(formattedTime/60).." Minutes"
-                    else
-                        initialize[world] = math.floor(formattedTime/60).." Minutes"
-                    end
+        if not nuked then
+            if not wrong then
+                local formTime = os.time()
+                customizable.plant(assign[idx])
+                for i = 1, 2 do
+                    customizable.recheckWorld(assign[idx])
+                end
+                local formattedTime = os.time() - formTime
+                if not splice then
+                    initialize[world] = customizable.growScan(seed).." | "..math.floor(formattedTime/60).." Minutes"
                 else
-                    customizable.writeFile("("..world..") is wrong id")
-                    wrong = false
-                    print("["..pcallBot.."]("..world..") is wrong door id, skipped world")
-                    customizable.botStatics("("..world..") is wrong door id, skipped world","Script status : Running")
+                    initialize[world] = math.floor(formattedTime/60).." Minutes"
                 end
             else
-                customizable.writeFile("("..world..") is NUKED !!")
-                nuked = false
-                print("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
-                customizable.botStatics("("..world..") is NUKED!, check ur world","Script status : Running")
+                customizable.writeFile("("..world..") is wrong id")
+                wrong = false
+                print("["..pcallBot.."]("..world..") is wrong door id, skipped world")
+                customizable.botStatics("("..world..") is wrong door id, skipped world","Script status : Running")
             end
         else
-            subserver = false
-            customizable.botStatics(""..getBot().name.." system is subserver, sleeping on "..delayidiotserver.." minutes","Status Script : Running")
-            sleep(delayidiotserver * 60000)
+            customizable.writeFile("("..world..") is NUKED !!")
+            nuked = false
+            print("["..pcallBot.."]"..world.." is NUKED!, check ur world !!")
+            customizable.botStatics("("..world..") is NUKED!, check ur world","Script status : Running")
         end
     end
     customizable.botStatics(""..getBot().name.." finished all world","Script status : Stoped, Reason : Finished all world")
