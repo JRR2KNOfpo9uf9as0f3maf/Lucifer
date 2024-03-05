@@ -100,34 +100,12 @@ end
 
 customizable.botStatics = function(text,execution)
     if webhookstatuslink ~= "x"  then
-        text = [[
-            $webHookUrl = "]]..webhookstatuslink..[["
-            $payload = @{
-                username = "Caramoy's"
-                "content" = "@everyone"
-                embeds = @(
-                    @{
-                        color = "]]..math.random(111111,999999)..[["
-                        fields = @(
-                            @{
-                                name = ""
-                                value = "]]..text..[["
-                                inline = "false"
-                            }
-                        )
-                        footer = @{
-                            text = "]]..execution..[["
-                        }
-                    }
-                )
-            }
-            
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-            Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Post -ContentType "application/json"
-        ]]
-        local file = io.popen("powershell -command -", "w")
-        file:write(text)
-        file:close()
+        local webhook = Webhook.new(webhookstatuslink)
+        webhook.content = "@everyone"
+        webhook.embed1.use = true
+        webhook.embed1:addField("",text,false)
+        webhook.embed1.footer.text = execution
+        webhook:send()
     end
 end
 
@@ -162,44 +140,15 @@ customizable.initializeBots = function()
 	if linkbotinfo ~= "x" then
         realtime = os.time() - customizable.formatTime
         for idx, val in pairs(reversed) do
-            local text = [[
-                $webHookUrl = "]]..linkbotinfo..[[/messages/]]..val..[["
-                $payload = @{
-                    username = "Caramoy's"
-                    embeds = @(
-                        @{
-                            title = "Caramoy Syndicate [https://discord.com/invite/fTTKW8vvuq]"
-                            color = "]]..math.random(111111,999999)..[["
-                            fields = @(
-                                @{
-                                    name = "Information"
-                                    value = "]].."Botname : ["..getBot().level.."]"..string.upper(getBot().name).."\nCurrent : "..string.upper(getBot():getWorld().name).."\nStatus : "..customizable.initBot().."\nRuntime : "..math.floor(realtime/86400).." Days "..math.floor(realtime%86400/3600).." Hours "..math.floor(realtime%86400%3600/60).." Minutes"..[["
-                                    inline = "true"
-                                }
-                                @{
-                                    name = "Storage Seed"
-                                    value = "]]..customizable.initOnStorage()..[["
-                                    inline = "true"
-                                }
-                                @{
-                                    name = "Farm Estimates"
-                                    value = "]]..customizable.initOnFarm()..[["
-                                    inline = "false"
-                                }
-                            )
-                            footer = @{
-                                text = "[Lucifer] : Plant Script`nLast update : ]]..(os.date("!%a %b %d, %Y at %I:%M %p", os.time() + 7 * 60 * 60))..[["
-                            }
-                        }
-                    )
-                }
-                
-                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Patch -ContentType 'application/json'
-            ]]
-            local pipe = io.popen("powershell -command -", "w")
-            pipe:write(text)
-            pipe:close()
+            local webhook = Webhook.new(linkbotinfo)
+            webhook.embed1.use = true
+            webhook.embed1.title = "Caramoy Syndicate [https://discord.com/invite/fTTKW8vvuq]"
+            webhook.embed1.color = math.random(111111,999999)
+            webhook.embed1:addField("Information","Botname : ["..getBot().level.."]"..string.upper(getBot().name).."\nCurrent : "..string.upper(getBot():getWorld().name).."\nStatus : "..customizable.initBot().."\nRuntime : "..math.floor(realtime/86400).." Days "..math.floor(realtime%86400/3600).." Hours "..math.floor(realtime%86400%3600/60).." Minutes",true)
+            webhook.embed1:addField("Storage Seed",customizable.initOnStorage(),true)
+            webhook.embed1:addField("Farm Estimates",customizable.initOnFarm(),false)
+            webhook.embed1.footer.text = "[Lucifer] : Plant Script`nLast update : "..(os.date("!%a %b %d, %Y at %I:%M %p", os.time() + 7 * 60 * 60))..""
+            webhook:edit(val)
         end    
     end
 end
@@ -327,7 +276,7 @@ end
 
 customizable.placeFarmable = function(x,y,str)
     for _,idx in pairs(botTile) do
-        if getTile(x + idx,y + str).fg == 0 then
+        if getTile(x + idx,y + str).fg == 0 and getBot():getWorld():hasAccess(x + idx,y + str) ~= 0 and not getTile(x + idx,y + str):hasFlag(4096) then
             return true
         end
     end
@@ -493,106 +442,98 @@ customizable.pattern = function(world,id)
         getBot():findPath(botX,botY)
         sleep(100)
     end
-    local count = 0
+    count = 0
     while customizable.placeFarmable(botX,botY,-2) do
         for _,i in pairs(botTile) do
-            if getTile(botX + i,botY - 2).fg == 0 then
+            if getTile(botX + i,botY - 2).fg == 0 and getBot():getWorld():hasAccess(botX + i,botY - 2) ~= 0 and not getTile(botX + i,botY - 2):hasFlag(4096) then
                 getBot():place(botX + i,botY - 2,seed)
                 sleep(delayplant)
                 customizable.reconnect(world,id,botX,botY)
             end
         end
         count = count + 1
-        if count == 5 then
+        if count == 50 then
             count = 0
             break
         end
     end
-    sleep(delayplant)
     while customizable.placeFarmable(botX,botY,0) do
         for _,i in pairs(botTile) do
-            if getTile(botX+i,botY).fg == 0 then
+            if getTile(botX+i,botY).fg == 0 and getBot():getWorld():hasAccess(botX+i,botY) ~= 0 and not getTile(botX+i,botY):hasFlag(4096) then
                 getBot():place(botX+i,botY,seed)
                 sleep(delayplant)
                 customizable.reconnect(world,id,botX,botY)
             end
         end
-        sleep(delayplant)
         count = count + 1
-        if count == 5 then
+        if count == 50 then
             count = 0
             break
         end
     end
-    sleep(delayplant)
     while customizable.placeFarmable(botX,botY,2) do
         for _,i in pairs(botTile) do
-            if getTile(botX+i,botY + 2).fg == 0 then
+            if getTile(botX+i,botY + 2).fg == 0 and getBot():getWorld():hasAccess(botX+i,botY + 2) ~= 0 and not getTile(botX+i,botY + 2):hasFlag(4096) then
                 getBot():place(botX+i,botY + 2,seed)
                 sleep(delayplant)
                 customizable.reconnect(world,id,botX,botY)
             end
         end
         count = count + 1
-        if count == 5 then
+        if count == 50 then
             count = 0
             break
         end
     end
-    sleep(delayplant)
     if splice then
-        local count = 0
         while customizable.placeFarmable(botX,botY,-2) do
             for _,i in pairs(botTile) do
-                if getTile(botX + i,botY - 2).fg == seed then
+                if getTile(botX + i,botY - 2).fg == seed and getBot():getWorld():hasAccess(botX + i,botY - 2) ~= 0 and not getTile(botX + i,botY - 2):hasFlag(4096) then
                     getBot():place(botX + i,botY - 2,seedsplice)
                     sleep(delayplant)
                     customizable.reconnect(world,id,botX,botY)
                 end
             end
             count = count + 1
-            if count == 5 then
+            if count == 50 then
                 count = 0
                 break
             end
         end
-        sleep(delayplant)
         while customizable.placeFarmable(botX,botY,0) do
             for _,i in pairs(botTile) do
-                if getTile(botX+i,botY).fg == seed then
+                if getTile(botX+i,botY).fg == seed and getBot():getWorld():hasAccess(botX+i,botY) ~= 0 and not getTile(botX+i,botY):hasFlag(4096) then
                     getBot():place(botX+i,botY,seedsplice)
                     sleep(delayplant)
                     customizable.reconnect(world,id,botX,botY)
                 end
             end
             count = count + 1
-            if count == 5 then
+            if count == 50 then
                 count = 0
                 break
             end
         end
-        sleep(delayplant)
         while customizable.placeFarmable(botX,botY,2) do
             for _,i in pairs(botTile) do
-                if getTile(botX+i,botY + 2).fg == seed then
+                if getTile(botX+i,botY + 2).fg == seed and getBot():getWorld():hasAccess(botX+i,botY + 2) ~= 0 and not getTile(botX+i,botY + 2):hasFlag(4096)  then
                     getBot():place(botX+i,botY + 2,seedsplice)
                     sleep(delayplant)
                     customizable.reconnect(world,id,botX,botY)
                 end
             end
             count = count + 1
-            if count == 5 then
+            if count == 50 then
                 count = 0
                 break
             end
         end
-        sleep(delayplant)
     end
 end
 
 customizable.detectTile = function()
     for x = 0, 99 do
-        if getTile(x,1):canHarvest() or not getTile(x,1):canHarvest() then
+        if getTile(x,1).flags ~= 0 then
             return true
         end
     end
@@ -606,29 +547,31 @@ customizable.recheckWorld = function(threads)
     tileD = 0
     print("["..pcallBot.."]Rechecking")
     if customizable.detectTile() then
-        for y = -1 , 53 do
+        for y = 0 , 53, 1 do
             for x = tileA, tileB, tileC do
                 if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
                     getBot():findPath(x,y)
                     sleep(30)
-                    local count = 0
                     customizable.reconnect(threads,door,x,y)
-                    while getTile(x,y).fg ~= seed do
+                    count = 0
+                    while getTile(x,y).fg ~= seed and getBot():getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) do
                         getBot():place(x,y,seed)
                         sleep(delayplant)
                         customizable.reconnect(threads,door,x,y)
                         count = count + 1
-                        if count == 5 then
+                        if count == 15 then
+                            count = 0
                             break
                         end
                     end
                     if splice then
-                        while getTile(x,y).fg == seed do
+                        while getTile(x,y).fg == seed and getBot():getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) do
                             getBot():place(x,y,seedsplice)
                             sleep(delayplant)
                             customizable.reconnect(threads,door,x,y)
                             count = count + 1
-                            if count == 5 then
+                            if count == 15 then
+                                count = 0
                                 break
                             end
                         end
@@ -679,29 +622,31 @@ customizable.recheckWorld = function(threads)
             end
         end
     else
-        for y = -1 , 53 do
+        for y = 0 , 53, 1 do
             for x = tileA, tileB, tileC do
                 if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed then
                     getBot():findPath(x,y)
                     sleep(30)
-                    local count = 0
                     customizable.reconnect(threads,door,x,y)
-                    while getTile(x,y).fg ~= seed do
+                    count = 0
+                    while getTile(x,y).fg ~= seed and getBot():getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) do
                         getBot():place(x,y,seed)
                         sleep(delayplant)
                         customizable.reconnect(threads,door,x,y)
                         count = count + 1
-                        if count == 5 then
+                        if count == 15 then
+                            count = 0
                             break
                         end
                     end
                     if splice then
-                        while getTile(x,y).fg == seed do
+                        while getTile(x,y).fg == seed and getBot():getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) do
                             getBot():place(x,y,seedsplice)
                             sleep(delayplant)
                             customizable.reconnect(threads,door,x,y)
                             count = count + 1
-                            if count == 5 then
+                            if count == 15 then
+                                count = 0
                                 break
                             end
                         end
