@@ -288,6 +288,7 @@ customizable.itemFloat = function(id)
 end
 
 customizable.onTake = function(threads)
+    ::back::
     for i = customizable.indexTake , #storage do
         world = customizable.split(storage[i],"[^|]+")[1]
         door = customizable.split(storage[i],"[^|]+")[2]
@@ -296,23 +297,37 @@ customizable.onTake = function(threads)
         if not nuked then
             if not wrong then
                 if not splice then
-                    if customizable.itemFloat(seed) == 0 and not looping then
+                    if customizable.itemFloat(seed) == 0 then
                         initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
                         customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
                         print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
-                        customizable.indexTake = customizable.indexTake + 1
-                        if customizable.indexTake > #storage then
-                            initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
-                            customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seed storage is limit")
-                            customizable.initializeBots()
-                            if removingbot then
-                                removeBot()
-                                sleep(2000)
-                            else
-                                customizable.warp(customizable.randomLetter(),"")
+                        if not looping then
+                            customizable.indexTake = customizable.indexTake + 1
+                            if customizable.indexTake > #storage then
+                                initialize[world] = ""..customizable.itemFloat(seed).."x (EMPTY)"
+                                customizable.botStatics("All seed storage has empty","Status Script : Stopped, Reason : All seed storage is empty")
+                                customizable.initializeBots()
+                                if removingbot then
+                                    removeBot()
+                                    sleep(2000)
+                                else
+                                    customizable.warp(customizable.randomLetter(),"")
+                                end
+                                customizable.notifications("["..pcallBot.."]All take storage has empty")
+                                getBot():stopScript()
                             end
-                            customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
-                            getBot():stopScript()
+                        else
+                            if #storage == 1 then
+                                sleep(delaylooping * 1000)
+                                goto back
+                            else
+                                sleep(delaylooping * 1000)
+                                customizable.indexTake = customizable.indexTake + 1
+                                if customizable.indexTake > #storage then
+                                    customizable.indexTake = 1
+                                    goto back
+                                end
+                            end
                         end
                     else
                         for _, object in pairs(getBot():getWorld():getObjects()) do
@@ -335,20 +350,33 @@ customizable.onTake = function(threads)
                         initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
                         customizable.botStatics("Seeds storage : ||"..world.."|| has empty, skipped world","Status Script : Running")
                         print("["..pcallBot.."]Seeds storage : ("..world..") has empty, skipped world")
-                        customizable.indexTake = customizable.indexTake + 1
-                        if customizable.indexTake > #storage then
-                            initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
-                            customizable.botStatics("All seeds storage has empty","Status Script : Stopped, Reason : All seeds storage is empty")
-                            customizable.initializeBots()
-                            customizable.warp(customizable.randomLetter(),"")
-                            if removingbot then
-                                removeBot()
-                                sleep(2000)
-                            else
-                                customizable.warp(customizable.randomLetter(),"")
+                        if not looping then
+                            customizable.indexTake = customizable.indexTake + 1
+                            if customizable.indexTake > #storage then
+                                initialize[world] = ""..customizable.itemFloat(seed).."x / "..customizable.itemFloat(seedsplice).."x (EMPTY)"
+                                customizable.botStatics("All seed storage has empty","Status Script : Stopped, Reason : All seed storage is empty")
+                                customizable.initializeBots()
+                                if removingbot then
+                                    removeBot()
+                                    sleep(2000)
+                                else
+                                    customizable.warp(customizable.randomLetter(),"")
+                                end
+                                customizable.notifications("["..pcallBot.."]All take storage has empty")
+                                getBot():stopScript()
                             end
-                            customizable.notifications("["..pcallBot.."]All seeds storage has empty, terminated script ")
-                            getBot():stopScript()
+                        else
+                            if #storage == 1 then
+                                sleep(delaylooping * 1000)
+                                goto back
+                            else
+                                sleep(delaylooping * 1000)
+                                customizable.indexTake = customizable.indexTake + 1
+                                if customizable.indexTake > #storage then
+                                    customizable.indexTake = 1
+                                    goto back
+                                end
+                            end
                         end
                     else
                         for _, object in pairs(getBot():getWorld():getObjects()) do
@@ -578,28 +606,14 @@ customizable.recheckWorld = function(threads)
                     end
                 end
                 if splice then
-                    if getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 then
-                        if looping then
-                            while getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 do
-                                customizable.onTake(threads)
-                                sleep(delaylooping * 1000)
-                            end
-                        else
-                            customizable.onTake(threads)
-                        end
+                    if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                        customizable.onTake(threads)
                         customizable.warp(threads,door)
                         customizable.initializeBots()
                     end
                 else
-                    if getBot():getInventory():getItemCount(seed) <= 15 then
-                        if looping then
-                            while getBot():getInventory():getItemCount(seed) <= 15 do
-                                customizable.onTake(threads)
-                                sleep(delaylooping * 1000)
-                            end
-                        else
-                            customizable.onTake(threads)
-                        end
+                    if getBot():getInventory():getItemCount(seed) == 0 then
+                        customizable.onTake(threads)
                         customizable.warp(threads,door)
                         customizable.initializeBots()
                     end
@@ -653,28 +667,14 @@ customizable.recheckWorld = function(threads)
                     end
                 end
                 if splice then
-                    if getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 then
-                        if looping then
-                            while getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 do
-                                customizable.onTake(threads)
-                                sleep(delaylooping * 1000)
-                            end
-                        else
-                            customizable.onTake(threads)
-                        end
+                    if getBot():getInventory():getItemCount(seed) == 0 or getBot():getInventory():getItemCount(seedsplice) == 0 then
+                        customizable.onTake(threads)
                         customizable.warp(threads,door)
                         customizable.initializeBots()
                     end
                 else
-                    if getBot():getInventory():getItemCount(seed) <= 15 then
-                        if looping then
-                            while getBot():getInventory():getItemCount(seed) <= 15 do
-                                customizable.onTake(threads)
-                                sleep(delaylooping * 1000)
-                            end
-                        else
-                            customizable.onTake(threads)
-                        end
+                    if getBot():getInventory():getItemCount(seed) == 0 then
+                        customizable.onTake(threads)
                         customizable.warp(threads,door)
                         customizable.initializeBots()
                     end
@@ -715,27 +715,13 @@ customizable.plant = function(threads)
                 end
                 if splice then
                     if getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 then
-                        if looping then
-                            while getBot():getInventory():getItemCount(seed) <= 15 or getBot():getInventory():getItemCount(seedsplice) <= 15 do
-                                customizable.onTake(threads)
-                                sleep(delaylooping * 1000)
-                            end
-                        else
-                            customizable.onTake(threads)
-                        end
+                        customizable.onTake(threads)
                         customizable.warp(threads,door)
                         customizable.initializeBots()
                     end
                 else
                     if getBot():getInventory():getItemCount(seed) <= 15 then
-                        if looping then
-                            while getBot():getInventory():getItemCount(seed) <= 15 do
-                                customizable.onTake(threads)
-                                sleep(delaylooping * 1000)
-                            end
-                        else
-                            customizable.onTake(threads)
-                        end
+                        customizable.onTake(threads)
                         customizable.warp(threads,door)
                         customizable.initializeBots()
                     end
