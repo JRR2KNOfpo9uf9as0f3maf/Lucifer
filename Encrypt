@@ -593,13 +593,13 @@ customizable.recheckWorld = function(threads)
     if customizable.detectTile() then
         for y = 0 , 53, 1 do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and y ~= 0 then
                     bot:findPath(x,y)
                     customizable.reconnect(threads,door,x,y)
                     if bot:isInTile(x,y) then
                         if splice then
                             count = 0
-                            while getTile(x,y).fg ~= seed do
+                            while getTile(x,y).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096)  do
                                 bot:place(x,y,seed)
                                 sleep(delayplant)
                                 customizable.reconnect(threads,door,x,y)
@@ -615,7 +615,7 @@ customizable.recheckWorld = function(threads)
                                 customizable.reconnect(threads,door,x,y)
                             end
                         else
-                            if getTile(x,y).fg ~= seed then
+                            if getTile(x,y).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096)  then
                                 bot:place(x,y,seed)
                                 sleep(delayplant)
                                 customizable.reconnect(threads,door,x,y)
@@ -652,13 +652,13 @@ customizable.recheckWorld = function(threads)
     else
         for y = 0 , 53, 1 do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 then
                     bot:findPath(x,y)
                     customizable.reconnect(threads,door,x,y)
                     if bot:isInTile(x,y) then
                         if splice then
                             count = 0
-                            while getTile(x,y).fg ~= seed do
+                            while getTile(x,y).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096)  do
                                 bot:place(x,y,seed)
                                 sleep(delayplant)
                                 customizable.reconnect(threads,door,x,y)
@@ -674,7 +674,7 @@ customizable.recheckWorld = function(threads)
                                 customizable.reconnect(threads,door,x,y)
                             end
                         else
-                            if getTile(x,y).fg ~= seed then
+                            if getTile(x,y).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096)  then
                                 bot:place(x,y,seed)
                                 sleep(delayplant)
                                 customizable.reconnect(threads,door,x,y)
@@ -717,7 +717,7 @@ customizable.plant = function(threads)
     for val = 2,3 do
         for y = val, 53, increment do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) and x >= 3 then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and x >= 3 then
                     bot:findPath(x-2,y)
                     customizable.reconnect(threads,door,x-2,y)
                     if bot:isInTile(x-2,y) then
