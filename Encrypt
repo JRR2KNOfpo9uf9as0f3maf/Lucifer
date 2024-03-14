@@ -499,7 +499,7 @@ customizable.pattern = function(world,id)
             end
         end
         count = count + 1
-        if count == 50 then
+        if count == 5 then
             count = 0
             break
         end
@@ -513,7 +513,7 @@ customizable.pattern = function(world,id)
             end
         end
         count = count + 1
-        if count == 50 then
+        if count == 5 then
             count = 0
             break
         end
@@ -527,7 +527,7 @@ customizable.pattern = function(world,id)
             end
         end
         count = count + 1
-        if count == 50 then
+        if count == 5 then
             count = 0
             break
         end
@@ -579,47 +579,46 @@ customizable.pattern = function(world,id)
 end
 
 customizable.detectTile = function()
-    for x = 0, 99 do
+    for x = 1, 99 do
         if getTile(x,1).flags ~= 0 then
             return true
         end
     end
     return false
-end 
+end
 
 customizable.recheckWorld = function(threads)
-    tileA = 99
-    tileB = 0
-    tileC = -1
-    tileD = 0
+    tileA, tileB, tileC, tileD = 99, 0, -1, 0
     print(pcallBot..'. Rechecking')
     if customizable.detectTile() then
         for y = 0 , 53, 1 do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and y ~= 0 and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) then
                     bot:findPath(x,y)
-                    sleep(30)
                     customizable.reconnect(threads,door,x,y)
-                    count = 0
-                    while getTile(x,y).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) do
-                        bot:place(x,y,seed)
-                        sleep(delayplant)
-                        customizable.reconnect(threads,door,x,y)
-                        count = count + 1
-                        if count >= 10 then
+                    if bot:isInTile(x,y) then
+                        if splice then
                             count = 0
-                            break
-                        end
-                    end
-                    if splice then
-                        while getTile(x,y).fg == seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) do
-                            bot:place(x,y,seedsplice)
-                            sleep(delayplant)
-                            customizable.reconnect(threads,door,x,y)
-                            count = count + 1
-                            if count >= 10 then
-                                count = 0
-                                break
+                            while getTile(x,y).fg ~= seed do
+                                bot:place(x,y,seed)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,door,x,y)
+                                count = count + 1
+                                if count == 10 then
+                                    count = 0
+                                    break
+                                end
+                            end
+                            while getTile(x,y).fg == seed do
+                                bot:place(x,y,seedsplice)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,door,x,y)
+                            end
+                        else
+                            if getTile(x,y).fg ~= seed then
+                                bot:place(x,y,seed)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,door,x,y)
                             end
                         end
                     end
@@ -642,15 +641,9 @@ customizable.recheckWorld = function(threads)
             end
             if tileD == 1 then
                 if tileA == 0 then
-                    tileA = 99
-                    tileB = 0
-                    tileC = -1
-                    tileD = 0
+                    tileA, tileB, tileC, tileD = 99, 0, -1, 0
                 elseif tileA == 99 then
-                    tileA = 0
-                    tileB = 99
-                    tileC = 1
-                    tileD = 0
+                    tileA, tileB, tileC, tileD = 0, 99, 1, 0
                 end
             elseif tileD == 0 then
                 tileD = tileD + 1
@@ -659,29 +652,32 @@ customizable.recheckWorld = function(threads)
     else
         for y = 0 , 53, 1 do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) then
                     bot:findPath(x,y)
-                    sleep(30)
                     customizable.reconnect(threads,door,x,y)
-                    count = 0
-                    while getTile(x,y).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) do
-                        bot:place(x,y,seed)
-                        sleep(delayplant)
-                        count = count + 1
-                        if count >= 10 then
+                    if bot:isInTile(x,y) then
+                        if splice then
                             count = 0
-                            break
-                        end
-                    end
-                    if splice then
-                        while getTile(x,y).fg == seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) do
-                            bot:place(x,y,seedsplice)
-                            sleep(delayplant)
-                            customizable.reconnect(threads,door,x,y)
-                            count = count + 1
-                            if count >= 10 then
-                                count = 0
-                                break
+                            while getTile(x,y).fg ~= seed do
+                                bot:place(x,y,seed)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,door,x,y)
+                                count = count + 1
+                                if count == 10 then
+                                    count = 0
+                                    break
+                                end
+                            end
+                            while getTile(x,y).fg == seed do
+                                bot:place(x,y,seedsplice)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,door,x,y)
+                            end
+                        else
+                            if getTile(x,y).fg ~= seed then
+                                bot:place(x,y,seed)
+                                sleep(delayplant)
+                                customizable.reconnect(threads,door,x,y)
                             end
                         end
                     end
@@ -704,15 +700,9 @@ customizable.recheckWorld = function(threads)
             end
             if tileD == 1 then
                 if tileA == 0 then
-                    tileA = 99
-                    tileB = 0
-                    tileC = -1
-                    tileD = 0
+                    tileA, tileB, tileC, tileD = 99, 0, -1, 0
                 elseif tileA == 99 then
-                    tileA = 0
-                    tileB = 99
-                    tileC = 1
-                    tileD = 0
+                    tileA, tileB, tileC, tileD = 0, 99, 1, 0
                 end
             elseif tileD == 0 then
                 tileD = tileD + 1
@@ -722,18 +712,17 @@ customizable.recheckWorld = function(threads)
 end
 
 customizable.plant = function(threads)
-    tileA = 99
-    tileB = 0
-    tileC = -1
+    tileA, tileB, tileC = 99, 0, -1
     print(pcallBot..'. Planting')
     for val = 2,3 do
         for y = val, 53, increment do
             for x = tileA, tileB, tileC do
-                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and x >= 3 then
+                if getTile(x, y).fg == 0 and getTile(x, y + 1).fg ~= 0 and getTile(x, y + 1).fg ~= seed and bot:getWorld():hasAccess(x,y) ~= 0 and not getTile(x,y):hasFlag(4096) and x >= 3 then
                     bot:findPath(x-2,y)
-                    sleep(30)
                     customizable.reconnect(threads,door,x-2,y)
-                    customizable.pattern(threads,door)
+                    if bot:isInTile(x-2,y) then
+                        customizable.pattern(threads,door)
+                    end
                 end
                 if splice then
                     if inventory:getItemCount(seed) <= 15 or inventory:getItemCount(seedsplice) <= 15 then
